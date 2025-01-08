@@ -14,5 +14,6 @@ def print_msg(msg):
 
 print(div_numbers(4,2))
 print_msg("Hello world from iss54")
+print_msg("Hello world from iss55")
 print(sum_numbers(4,2))
 print(mul_numbers(4,2))
