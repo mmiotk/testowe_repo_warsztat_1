@@ -1,5 +1,6 @@
 def div_numbers(a,b):
-  return a/b
+  if (b != 0): 
+    return a/b
 
 def print_msg(msg):
   print(msg)
