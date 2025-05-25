@@ -2,18 +2,11 @@ name: GitHub Actions Demo
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 on: [push]
 jobs:
-  Explore-GitHub-Actions:
+  example-job:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🎉 Zadanie zostało automatycznie wyzwolone przez zdarzenie ${{ github.event_name }}."
-      - run: echo "🐧 To zadanie jest teraz uruchomione na serwerze ${{ runner.os }} hostowanym przez GitHub!"
-      - run: echo "🔎 Nazwa Twojej gałęzi to ${{ github.ref }}, a Twoje repozytorium to ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - run: echo "💡 Repozytorium ${{ github.repository }} zostało sklonowane na runnera."
-      - run: echo "🖥️ Przepływ pracy jest teraz gotowy do testowania Twojego kodu na runnerze."
-      - name: List files in the repository
+      - name: Retrieve secret
+        env:
+          super_secret: ${{ secrets.SUPERSECRET }}
         run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 Status tego zadania to ${{ job.status }}."
-    
+          example-command "$super_secret"
