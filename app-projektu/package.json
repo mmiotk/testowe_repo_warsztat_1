@@ -1,0 +1,13 @@
+{
+  "name": "node-postgres-service-example-in-subdir",
+  "version": "1.0.0",
+  "description": "Example project in subfolder to connect to PostgreSQL service in GitHub Actions",
+  "main": "client.js",
+  "scripts": {
+    "start": "node client.js",
+    "test": "echo \"No tests defined, but CI runs client.js\""
+  },
+  "dependencies": {
+    "pg": "^8.12.0"
+  }
+}
