@@ -1,47 +1,33 @@
-name: Minimal CI Pipeline
+name: Node.js CI
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch: # Umożliwia ręczne uruchomienie
+  workflow_dispatch:
 
 jobs:
-  setup:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 20, 22] # Używam aktualnych wersji LTS i najnowszej stabilnej
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Make setup script executable
-        run: chmod +x ./setup_server.sh
+      - name: Set up Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm' # Włączenie cachowania zależności npm dla szybszych buildów
 
-      - name: Run setup
-        run: ./setup_server.sh
+      - name: Install dependencies ⚙️
+        run: npm ci # Użyj 'npm ci' dla czystej instalacji z package-lock.json
 
-  build:
-    needs: setup # Zależy od zadania 'setup'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code # Kod jest pobierany ponownie
-        uses: actions/checkout@v4
+      - name: Build project (if applicable) 🏗️
+        run: npm run build --if-present # Uruchom skrypt 'build' jeśli istnieje w package.json
 
-      - name: Make build script executable
-        run: chmod +x ./build_server.sh
-
-      - name: Run build
-        run: ./build_server.sh # Wynik tego skryptu (np. pliki) nie będzie dostępny w jobie 'test' bez artefaktów
-
-  test:
-    needs: build # Zależy od zadania 'build'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code # Kod jest pobierany ponownie
-        uses: actions/checkout@v4
-
-      - name: Make test script executable
-        run: chmod +x ./test_server.sh
-
-      - name: Run tests
-        run: ./test_server.sh # Testuje świeżo pobrany kod
+      - name: Run tests 🧪
+        run: npm test
