@@ -1,4 +1,4 @@
-name: Node.js CI
+name: Node.js CI with Manual Cache
 
 on:
   push:
@@ -8,26 +8,43 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  example-job:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [18, 20, 22] # Używam aktualnych wersji LTS i najnowszej stabilnej
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ matrix.node }}
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-          cache: 'npm' # Włączenie cachowania zależności npm dla szybszych buildów
+          node-version: '20' # Możesz wybrać konkretną wersję Node.js lub użyć matrycy
 
-      - name: Install dependencies ⚙️
-        run: npm ci # Użyj 'npm ci' dla czystej instalacji z package-lock.json
+      - name: Cache node modules (global npm cache)
+        uses: actions/cache@v4
+        id: npm-cache # Nadanie ID krokowi cache, aby móc sprawdzić, czy cache został trafiony
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm # Ścieżka do globalnego katalogu cache npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
 
-      - name: Build project (if applicable) 🏗️
-        run: npm run build --if-present # Uruchom skrypt 'build' jeśli istnieje w package.json
+      - name: Display npm cache status
+        if: always() # Uruchom ten krok zawsze, nawet jeśli poprzednie zawiodły (dla celów diagnostycznych)
+        run: |
+          echo "Cache hit: ${{ steps.npm-cache.outputs.cache-hit }}"
+          if [ "${{ steps.npm-cache.outputs.cache-hit }}" = "true" ]; then
+            echo "Cache for ~/.npm was restored."
+          else
+            echo "Cache for ~/.npm was not found or key mismatched. Will be saved post-job if successful."
+          fi
 
-      - name: Run tests 🧪
-        run: npm test
+      - name: Install dependencies
+        run: npm ci # 'npm ci' jest zalecane dla CI, instaluje z package-lock.json
+
+      - name: Run build (if applicable)
+        run: npm run build --if-present # Uruchom skrypt 'build' jeśli istnieje
+
+      - name: Run tests
+        run: npm test # Uruchom testy zdefiniowane w package.json
