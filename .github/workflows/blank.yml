@@ -1,60 +1,18 @@
-name: Node.js with PostgreSQL Service (in Subfolder)
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
+name: GitHub Actions Demo
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: [push]
 jobs:
-  container-job:
+  Explore-GitHub-Actions:
     runs-on: ubuntu-latest
-    container: node:20-bookworm-slim
-
-    # Domyślny katalog roboczy dla wszystkich poleceń 'run' w tym zadaniu
-    defaults:
-      run:
-        working-directory: ./app-projektu # <--- ZMIANA: Ustawienie domyślnego katalogu roboczego
-
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
+      - run: echo "🎉 Zadanie zostało automatycznie wyzwolone przez zdarzenie ${{ github.event_name }}."
+      - run: echo "🐧 To zadanie jest teraz uruchomione na serwerze ${{ runner.os }} hostowanym przez GitHub!"
+      - run: echo "🔎 Nazwa Twojej gałęzi to ${{ github.ref }}, a Twoje repozytorium to ${{ github.repository }}."
       - name: Check out repository code
-        uses: actions/checkout@v4 # Ten krok pobiera całe repozytorium
-
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: app-projektu/node_modules # <--- ZMIANA: Ścieżka do node_modules w podfolderze
-          key: ${{ runner.os }}-node20slim-modules-${{ hashFiles('app-projektu/package-lock.json') }} # <--- ZMIANA: Ścieżka do package-lock.json
-          restore-keys: |
-            ${{ runner.os }}-node20slim-modules-
-
-      - name: Install dependencies
-        # Ten krok użyje working-directory: ./app-projektu zdefiniowanego w defaults.run
-        run: npm ci
-
-      - name: Connect to PostgreSQL and run query
-        # Ten krok również użyje working-directory: ./app-projektu
-        run: node client.js
-        env:
-          DB_HOST: postgres
-          DB_PORT: 5432
-          DB_USER: user
-          DB_PASSWORD: password
-          DB_NAME: testdb
+        uses: actions/checkout@v4
+      - run: echo "💡 Repozytorium ${{ github.repository }} zostało sklonowane na runnera."
+      - run: echo "🖥️ Przepływ pracy jest teraz gotowy do testowania Twojego kodu na runnerze."
+      - name: List files in the repository
+        run: |
+          ls ${{ github.workspace }}
+      - run: echo "🍏 Status tego zadania to ${{ job.status }}."
