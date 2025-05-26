@@ -24,8 +24,7 @@ jobs:
     needs: setup # Zależy od zadania 'setup'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code # Kod jest pobierany ponownie
-        uses: actions/checkout@v4
+
 
       - name: Make build script executable
         run: chmod +x ./build_server.sh
