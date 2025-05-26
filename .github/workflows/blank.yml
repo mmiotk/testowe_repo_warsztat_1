@@ -1,12 +1,47 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
+name: Minimal CI Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # Umożliwia ręczne uruchomienie
+
 jobs:
-  example-job:
+  setup:
     runs-on: ubuntu-latest
     steps:
-      - name: Retrieve secret
-        env:
-          super_secret: ${{ secrets.SUPERSECRET }}
-        run: |
-          echo "$super_secret"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Make setup script executable
+        run: chmod +x ./setup_server.sh
+
+      - name: Run setup
+        run: ./setup_server.sh
+
+  build:
+    needs: setup # Zależy od zadania 'setup'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code # Kod jest pobierany ponownie
+        uses: actions/checkout@v4
+
+      - name: Make build script executable
+        run: chmod +x ./build_server.sh
+
+      - name: Run build
+        run: ./build_server.sh # Wynik tego skryptu (np. pliki) nie będzie dostępny w jobie 'test' bez artefaktów
+
+  test:
+    needs: build # Zależy od zadania 'build'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code # Kod jest pobierany ponownie
+        uses: actions/checkout@v4
+
+      - name: Make test script executable
+        run: chmod +x ./test_server.sh
+
+      - name: Run tests
+        run: ./test_server.sh # Testuje świeżo pobrany kod
