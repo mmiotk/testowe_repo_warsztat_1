@@ -1,4 +1,4 @@
-name: Node.js CI with Manual Cache
+name: Node.js with PostgreSQL Service (in Subfolder)
 
 on:
   push:
@@ -8,43 +8,53 @@ on:
   workflow_dispatch:
 
 jobs:
-  example-job:
+  container-job:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    container: node:20-bookworm-slim
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20' # Możesz wybrać konkretną wersję Node.js lub użyć matrycy
+    # Domyślny katalog roboczy dla wszystkich poleceń 'run' w tym zadaniu
+    defaults:
+      run:
+        working-directory: ./app-projektu # <--- ZMIANA: Ustawienie domyślnego katalogu roboczego
 
-      - name: Cache node modules (global npm cache)
-        uses: actions/cache@v4
-        id: npm-cache # Nadanie ID krokowi cache, aby móc sprawdzić, czy cache został trafiony
+    services:
+      postgres:
+        image: postgres:15
         env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm # Ścieżka do globalnego katalogu cache npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-      - name: Display npm cache status
-        if: always() # Uruchom ten krok zawsze, nawet jeśli poprzednie zawiodły (dla celów diagnostycznych)
-        run: |
-          echo "Cache hit: ${{ steps.npm-cache.outputs.cache-hit }}"
-          if [ "${{ steps.npm-cache.outputs.cache-hit }}" = "true" ]; then
-            echo "Cache for ~/.npm was restored."
-          else
-            echo "Cache for ~/.npm was not found or key mismatched. Will be saved post-job if successful."
-          fi
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4 # Ten krok pobiera całe repozytorium
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: app-projektu/node_modules # <--- ZMIANA: Ścieżka do node_modules w podfolderze
+          key: ${{ runner.os }}-node20slim-modules-${{ hashFiles('app-projektu/package-lock.json') }} # <--- ZMIANA: Ścieżka do package-lock.json
+          restore-keys: |
+            ${{ runner.os }}-node20slim-modules-
 
       - name: Install dependencies
-        run: npm ci # 'npm ci' jest zalecane dla CI, instaluje z package-lock.json
+        # Ten krok użyje working-directory: ./app-projektu zdefiniowanego w defaults.run
+        run: npm ci
 
-      - name: Run build (if applicable)
-        run: npm run build --if-present # Uruchom skrypt 'build' jeśli istnieje
-
-      - name: Run tests
-        run: npm test # Uruchom testy zdefiniowane w package.json
+      - name: Connect to PostgreSQL and run query
+        # Ten krok również użyje working-directory: ./app-projektu
+        run: node client.js
+        env:
+          DB_HOST: postgres
+          DB_PORT: 5432
+          DB_USER: user
+          DB_PASSWORD: password
+          DB_NAME: testdb
