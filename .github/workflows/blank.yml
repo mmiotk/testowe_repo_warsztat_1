@@ -17,4 +17,4 @@ jobs:
           git commit -m "Auto-update timestamp"
           git push
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
