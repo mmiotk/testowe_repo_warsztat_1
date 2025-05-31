@@ -1,12 +1,20 @@
-# Ten workflow pomoże nam zrozumieć, jakie informacje GitHub zbiera o zdarzeniu
-on: push
+# Ten workflow WYGLĄDA jakby mógł utworzyć nieskończoną pętlę, ale jest bezpieczny
+on:
+  push:
+    branches: [main]
 
 jobs:
-  investigate_event:
+  add_documentation:
     runs-on: ubuntu-latest
     steps:
-      - name: Pokaż informacje o commicie
+      - uses: actions/checkout@v3
+      - name: Dodaj timestamp do README (bezpieczne z GITHUB_TOKEN)
         run: |
-          echo "SHA commita: ${{ github.sha }}"
-          echo "Referacja Git: ${{ github.ref }}"
-          echo "Kto wykonał push: ${{ github.actor }}"
+          echo "Ostatnia aktualizacja: $(date)" >> README.md
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add README.md
+          git commit -m "Auto-update timestamp"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
