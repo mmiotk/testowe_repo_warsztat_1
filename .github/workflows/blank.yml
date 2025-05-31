@@ -1,20 +1,29 @@
-# Ten workflow WYGLĄDA jakby mógł utworzyć nieskończoną pętlę, ale jest bezpieczny
+name: Auto-update timestamp
 on:
   push:
     branches: [main]
+
+# Kluczowy element - jawne określenie uprawnień
+permissions:
+  contents: write  # Pozwól na modyfikację zawartości repozytorium
 
 jobs:
   add_documentation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Pobierz kod z repozytorium
+        uses: actions/checkout@v4  # Użyj najnowszej wersji
+        with:
+          # Ważne: użyj tokenu z odpowiednimi uprawnieniami
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Dodaj timestamp do README (bezpieczne z GITHUB_TOKEN)
         run: |
           echo "Ostatnia aktualizacja: $(date)" >> README.md
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add README.md
-          git commit -m "Auto-update timestamp"
+          git commit -m "Auto-update timestamp [skip ci]"
           git push
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Prawidłowe odwołanie
