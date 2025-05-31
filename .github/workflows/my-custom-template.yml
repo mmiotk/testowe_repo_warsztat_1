@@ -1,0 +1,14 @@
+# my-custom-template.yml
+name: Szablon organizacyjny
+
+on:
+  push:
+    branches: [ $default-branch ]
+
+jobs:
+  custom-job:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Organizacyjny krok
+      run: echo "Własny proces organizacyjny"
