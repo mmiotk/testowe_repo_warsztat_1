@@ -1,17 +1,17 @@
-# Ten workflow BĘDZIE uruchamiał kolejne workflow, jeśli istnieją
-on:
-  issues:
-    types: [opened]
+# Uruchamiaj przy różnych zdarzeniach - większa elastyczność
+on: [push, pull_request, release]
 
 jobs:
-  auto_triage:
+  flexible_response:
     runs-on: ubuntu-latest
     steps:
-      - name: Dodaj etykietę (wyzwoli kolejne workflow)
-        env:
-          # Używamy personal access token zamiast GITHUB_TOKEN
-          GH_TOKEN: ${{ secrets.MY_PERSONAL_TOKEN }}
-          ISSUE_URL: ${{ github.event.issue.html_url }}
+      - name: Reaguj na różne sytuacje
         run: |
-          gh issue edit $ISSUE_URL --add-label "needs-triage"
-          # Jeśli istnieje workflow reagujący na dodanie etykiety, zostanie uruchomiony
+          echo "Workflow uruchomiony przez: ${{ github.event_name }}"
+          if [ "${{ github.event_name }}" == "push" ]; then
+            echo "Wykryto nowy kod w repozytorium"
+          elif [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "Ktoś chce scalić swoje zmiany"
+          elif [ "${{ github.event_name }}" == "release" ]; then
+            echo "Została utworzona nowa wersja"
+          fi
