@@ -1,9 +1,12 @@
-# Najprostszy możliwy wyzwalacz
+# Ten workflow pomoże nam zrozumieć, jakie informacje GitHub zbiera o zdarzeniu
 on: push
 
 jobs:
-  hello_world:
+  investigate_event:
     runs-on: ubuntu-latest
     steps:
-      - name: Przywitaj się ze światem
-        run: echo "Witaj świecie! Kod został zaktualizowany."
+      - name: Pokaż informacje o commicie
+        run: |
+          echo "SHA commita: ${{ github.sha }}"
+          echo "Referacja Git: ${{ github.ref }}"
+          echo "Kto wykonał push: ${{ github.actor }}"
