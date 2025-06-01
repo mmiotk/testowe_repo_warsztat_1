@@ -1,50 +1,85 @@
-name: Kontrolowana sekwencja zadań
+name: Odporna na błędy architektura workflow
 on: [push]
 
 jobs:
-  validate_code:
-    name: "Walidacja kodu źródłowego"
+  critical_validation:
+    name: "Krytyczna walidacja"
     runs-on: ubuntu-latest
     steps:
-      - name: Sprawdź składnię i styl
+      - name: Sprawdzenia, które muszą się udać
         run: |
-          echo "🔍 Walidacja kodu: sprawdzanie składni, ESLint, Prettier"
-          echo "Czas rozpoczęcia: $(date '+%H:%M:%S')"
-          sleep 15
-          echo "✅ Kod jest poprawny i zgodny ze standardami"
+          echo "🎯 Krytyczna walidacja: podstawowe sprawdzenia"
+          # Symulacja czasami niepowodzenia
+          if [ $((RANDOM % 3)) -eq 0 ]; then
+            echo "❌ Krytyczny błąd wykryty!"
+            exit 1
+          fi
+          echo "✅ Krytyczna walidacja przeszła pomyślnie"
 
-  run_tests:
-    name: "Wykonanie testów"
-    needs: validate_code    # Czeka na zakończenie validate_code
+  optional_analysis:
+    name: "Opcjonalna analiza"
     runs-on: ubuntu-latest
     steps:
-      - name: Testy jednostkowe i integracyjne
+      - name: Dodatkowe sprawdzenia
         run: |
-          echo "🧪 Uruchamianie testów po pomyślnej walidacji"
-          echo "Czas rozpoczęcia: $(date '+%H:%M:%S')"
-          sleep 25
-          echo "✅ Wszystkie testy przeszły pomyślnie"
+          echo "📊 Opcjonalna analiza: dodatkowe metryki"
+          # Symulacja czasami niepowodzenia
+          if [ $((RANDOM % 2)) -eq 0 ]; then
+            echo "⚠️ Analiza nie powiodła się, ale to nie jest krytyczne"
+            exit 1
+          fi
+          echo "✅ Analiza zakończona sukcesem"
 
-  build_artifacts:
-    name: "Budowanie artefaktów"
-    needs: run_tests       # Czeka na zakończenie run_tests
+  conditional_deployment:
+    name: "Wdrożenie warunkowe"
+    # Używa always() żeby uruchomić się niezależnie od wyników poprzedników
+    if: always()
+    needs: [critical_validation, optional_analysis]
     runs-on: ubuntu-latest
     steps:
-      - name: Kompilacja i pakowanie
+      - name: Analiza wyników i decyzja o wdrożeniu
         run: |
-          echo "🏗️ Budowanie aplikacji po pomyślnych testach"
-          echo "Czas rozpoczęcia: $(date '+%H:%M:%S')"
-          sleep 20
-          echo "✅ Artefakty zostały zbudowane"
+          echo "🤔 Analizuję wyniki poprzednich zadań:"
+          
+          # Sprawdź status krytycznej walidacji
+          if [ "${{ needs.critical_validation.result }}" = "success" ]; then
+            echo "✅ Krytyczna walidacja: SUKCES"
+            critical_ok=true
+          else
+            echo "❌ Krytyczna walidacja: NIEPOWODZENIE"
+            critical_ok=false
+          fi
+          
+          # Sprawdź status opcjonalnej analizy
+          if [ "${{ needs.optional_analysis.result }}" = "success" ]; then
+            echo "✅ Opcjonalna analiza: SUKCES"
+            analysis_ok=true
+          else
+            echo "⚠️ Opcjonalna analiza: NIEPOWODZENIE (ale to OK)"
+            analysis_ok=false
+          fi
+          
+          # Podejmij decyzję o wdrożeniu
+          if [ "$critical_ok" = "true" ]; then
+            echo "🚀 DECYZJA: Wdrażam - krytyczne sprawdzenia przeszły"
+            echo "Dodatkowe informacje: analiza opcjonalna $([ "$analysis_ok" = "true" ] && echo "również przeszła" || echo "nie powiodła się, ale to nie blokuje wdrożenia")"
+          else
+            echo "🛑 DECYZJA: Nie wdrażam - krytyczne sprawdzenia nie przeszły"
+            exit 1
+          fi
 
-  deploy_staging:
-    name: "Wdrożenie na staging"
-    needs: build_artifacts # Czeka na zakończenie build_artifacts
+  notification_always:
+    name: "Powiadomienie zespołu"
+    if: always()  # Zawsze uruchom, niezależnie od wyników
+    needs: [critical_validation, optional_analysis, conditional_deployment]
     runs-on: ubuntu-latest
     steps:
-      - name: Wdrożenie na środowisko testowe
+      - name: Podsumowanie i powiadomienie
         run: |
-          echo "🚀 Wdrażanie na staging po zbudowaniu artefaktów"
-          echo "Czas rozpoczęcia: $(date '+%H:%M:%S')"
-          sleep 10
-          echo "✅ Aplikacja wdrożona na staging"
+          echo "📧 Wysyłanie podsumowania do zespołu:"
+          echo "Krytyczna walidacja: ${{ needs.critical_validation.result }}"
+          echo "Opcjonalna analiza: ${{ needs.optional_analysis.result }}"
+          echo "Wdrożenie: ${{ needs.conditional_deployment.result }}"
+          
+          # W rzeczywistości tutaj wysłałbyś powiadomienie na Slack, email, itp.
+          echo "✉️ Powiadomienie wysłane do kanału #deployments"
