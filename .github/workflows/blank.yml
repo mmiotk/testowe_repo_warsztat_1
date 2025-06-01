@@ -1,21 +1,45 @@
-# .github/workflows/main.yml
-name: Demonstracja własnej akcji
+name: Komunikacja z akcjami
 on: [push]
 
 jobs:
-  deploy:
+  inputs_outputs_demo:
     runs-on: ubuntu-latest
     steps:
-      - name: Pobierz kod repozytorium
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Uruchom niestandardowe wdrożenie
-        id: deploy
-        uses: ./.github/actions/custom-deploy
+      # Akcja z wieloma parametrami wejściowymi
+      - name: Skonfiguruj środowisko Python
+        uses: actions/setup-python@v4
         with:
-          environment: 'staging'
-          deployment-key: ${{ secrets.DEPLOY_KEY }}
+          # Wymagany parametr - wersja Python
+          python-version: '3.9'
+          # Opcjonalny parametr - włącz cache
+          cache: 'pip'
+          # Opcjonalny parametr - plik z wymaganiami
+          cache-dependency-path: 'requirements.txt'
+          # Opcjonalny parametr - architektura
+          architecture: 'x64'
+        # Każdy parametr w sekcji 'with' jest przekazywany do akcji
 
-      - name: Pokaż wynik wdrożenia
+      - name: Akcja generująca dane wyjściowe
+        id: build-info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const buildTime = new Date().toISOString();
+            const buildNumber = context.runNumber;
+            
+            // Ustawianie outputs dla użycia w kolejnych krokach
+            core.setOutput('build-time', buildTime);
+            core.setOutput('build-number', buildNumber);
+            
+            return `Build ${buildNumber} started at ${buildTime}`;
+        # Ta akcja produkuje dane wyjściowe, które możemy użyć później
+
+      # Krok używający danych z poprzedniej akcji
+      - name: Użyj danych z poprzedniej akcji
         run: |
-          echo "Aplikacja wdrożona na: ${{ steps.deploy.outputs.deployment-url }}"
+          echo "Czas buildu: ${{ steps.build-info.outputs.build-time }}"
+          echo "Numer buildu: ${{ steps.build-info.outputs.build-number }}"
+          echo "Pełny wynik: ${{ steps.build-info.outputs.result }}"
+        # Składnia steps.ID.outputs.NAZWA pozwala na dostęp do wyników
