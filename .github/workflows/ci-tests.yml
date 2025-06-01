@@ -1,28 +1,32 @@
-name: CI Tests  # ← Ta nazwa MUSI pasować do "CI Tests" w workflow_run
+name: Elastyczny wybór platformy
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      target_os:
+        description: 'Wybierz system operacyjny'
+        required: true
+        type: choice
+        options:
+          - Ubuntu
+          - Windows
+          - macOS
+
+      performance_tier:
+        description: 'Wybierz poziom wydajności'
+        required: true
+        type: choice
+        options:
+          - standard
+          - high-performance
 
 jobs:
-  # Najprostszy sposób - pojedynczy string
-  simple_job:
-    runs-on: ubuntu-latest
+  adaptive_deployment:
+    # Kombinacja stałych etykiet ze zmiennymi z parametrów wejściowych
+    runs-on: [self-hosted, "${{ inputs.target_os }}", "${{ inputs.performance_tier }}"]
     steps:
-      - name: Podstawowe zadanie
-        run: echo "Uruchamiam na najnowszym Ubuntu"
-
-  # Użycie zmiennej dla dynamicznego wyboru
-  dynamic_job:
-    runs-on: ${{ vars.PREFERRED_OS }}
-    steps:
-      - name: Dynamiczny wybór systemu
-        run: echo "Uruchamiam na systemie zdefiniowanym w zmiennej"
-
-  # Tablica etykiet dla precyzyjnego targetowania
-  precise_job:
-    runs-on: [self-hosted]
-    steps:
-      - name: Zadanie wymagające GPU
-        run: echo "Uruchamiam na dedykowanej maszynie z kartą graficzną"
+      - name: Wyświetl informacje o środowisku
+        run: |
+          echo "System operacyjny: ${{ inputs.target_os }}"
+          echo "Poziom wydajności: ${{ inputs.performance_tier }}"
+          echo "Architektura: $(uname -m)"
+          echo "Dostępna pamięć: $(free -h | head -2)"
