@@ -1,33 +1,18 @@
-name: Wykorzystanie grup runnerów
+name: Podstawowe użycie kontenera
 on: [push, pull_request]
 
 jobs:
-  group_based_execution:
-    # Uruchom na dowolnym runnerze z grupy ubuntu-runners
-    runs-on:
-      group: ubuntu-runners
+  simple_container_job:
+    runs-on: ubuntu-latest
+    # Najprostsza forma - tylko nazwa obrazu
+    container: node:18
     steps:
-      - name: Zadanie wykonywane przez grupę
+      - name: Sprawdź środowisko Node.js
         run: |
-          echo "📦 Uruchamiam na runnerze z grupy ubuntu-runners"
-          echo "GitHub wybierze najbardziej dostępny runner z tej grupy"
-          echo "Runner ID: ${{ runner.name }}"
-          echo "Grupa zapewnia redundancję i load balancing"
-
-  advanced_group_selection:
-    # Kombinacja grupy z dodatkowymi wymaganiami
-    runs-on:
-      group: ubuntu-runners
-      labels: ubuntu-20.04-16core
-    steps:
-      - name: Precyzyjny wybór w ramach grupy
-        run: |
-          echo "🎯 Runner spełniający wszystkie kryteria:"
-          echo "- Należy do grupy ubuntu-runners"
-          echo "- Ma etykietę ubuntu-20.04-16core"
-          echo "- Jest aktualnie dostępny"
-
-      - name: Wykorzystaj specjalne możliwości
-        run: |
-          echo "💪 Wykorzystuję 16 rdzeni CPU dla intensywnych obliczeń"
-          echo "Równoległe kompilacje, testy wydajnościowe, analiza danych"
+          # Ten kod uruchamia się wewnątrz kontenera node:18
+          echo "Sprawdzam wersję Node.js w kontenerze:"
+          node --version
+          echo "Sprawdzam wersję npm:"
+          npm --version
+          echo "Sprawdzam czy jestem w kontenerze:"
+          ls /.dockerenv && echo "✅ Jestem w kontenerze!" || echo "❌ Nie jestem w kontenerze"
