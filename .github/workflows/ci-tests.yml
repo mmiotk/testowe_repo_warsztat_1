@@ -1,32 +1,49 @@
-name: Elastyczny wybór platformy
-on:
-  workflow_dispatch:
-    inputs:
-      target_os:
-        description: 'Wybierz system operacyjny'
-        required: true
-        type: choice
-        options:
-          - Ubuntu
-          - Windows
-          - macOS
-
-      performance_tier:
-        description: 'Wybierz poziom wydajności'
-        required: true
-        type: choice
-        options:
-          - standard
-          - high-performance
+name: Testowanie na różnych platformach (repozytorium publiczne)
+on: [push, pull_request]
 
 jobs:
-  adaptive_deployment:
-    # Kombinacja stałych etykiet ze zmiennymi z parametrów wejściowych
-    runs-on: [self-hosted, "${{ inputs.target_os }}", "X64"]
+  test_linux_performance:
+    # Linux: 4 CPU, 16 GB RAM, 14 GB SSD - pełna wydajność
+    runs-on: ubuntu-latest
     steps:
-      - name: Wyświetl informacje o środowisku
+      - name: Sprawdź zasoby systemu
         run: |
-          echo "System operacyjny: ${{ inputs.target_os }}"
-          echo "Poziom wydajności: ${{ inputs.performance_tier }}"
+          echo "🖥️ Informacje o systemie Linux (publiczne repo):"
+          echo "CPU: $(nproc) rdzeni"
+          echo "RAM: $(free -h | awk '/^Mem:/ {print $2}')"
+          echo "Dysk: $(df -h / | awk 'NR==2 {print $2}')"
           echo "Architektura: $(uname -m)"
-          echo "Dostępna pamięć: $(free -h | head -2)"
+
+      - name: Test wydajności CPU
+        run: |
+          echo "🚀 Uruchamianie intensywnych obliczeń..."
+          time for i in {1..1000000}; do echo $i > /dev/null; done
+          echo "Test CPU zakończony"
+
+  test_windows_compatibility:
+    # Windows: 4 CPU, 16 GB RAM - najnowszy dostępny system
+    runs-on: windows-latest
+    steps:
+      - name: Sprawdź środowisko Windows
+        run: |
+          echo "🪟 Informacje o systemie Windows:"
+          echo "Procesor: $env:NUMBER_OF_PROCESSORS rdzeni"
+          systeminfo | findstr "Total Physical Memory"
+          echo "Architektura: $env:PROCESSOR_ARCHITECTURE"
+
+      - name: Test kompatybilności PowerShell
+        run: |
+          echo "💫 Test funkcji PowerShell..."
+          Get-ComputerInfo | Select-Object TotalPhysicalMemory, CsProcessors
+
+  test_macos_arm:
+    # macOS ARM (M1): 3 rdzenie, 7 GB RAM - najnowsza architektura Apple
+    runs-on: macos-latest
+    steps:
+      - name: Sprawdź środowisko macOS ARM
+        run: |
+          echo "🍎 Informacje o systemie macOS ARM:"
+          echo "CPU: $(sysctl -n hw.ncpu) rdzeni"
+          echo "RAM: $((($(sysctl -n hw.memsize) / 1024 / 1024 / 1024))) GB"
+          echo "Architektura: $(uname -m)"
+          echo "Model: $(sysctl -n hw.model)"
