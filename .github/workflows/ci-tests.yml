@@ -6,19 +6,23 @@ on:
     branches: [main, develop]
 
 jobs:
-  test:
+  # Najprostszy sposób - pojedynczy string
+  simple_job:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout kodu
-        uses: actions/checkout@v4
+      - name: Podstawowe zadanie
+        run: echo "Uruchamiam na najnowszym Ubuntu"
 
-      - name: Uruchom testy
-        run: |
-          echo "🧪 Uruchamianie testów jednostkowych..."
-          sleep 10  # Symulacja czasu wykonywania testów
-          echo "✅ Wszystkie testy przeszły pomyślnie!"
+  # Użycie zmiennej dla dynamicznego wyboru
+  dynamic_job:
+    runs-on: ${{ vars.PREFERRED_OS }}
+    steps:
+      - name: Dynamiczny wybór systemu
+        run: echo "Uruchamiam na systemie zdefiniowanym w zmiennej"
 
-      - name: Sprawdź pokrycie kodu
-        run: |
-          echo "📊 Analizuję pokrycie kodu..."
-          echo "Pokrycie: 85% - wynik zadowalający"
+  # Tablica etykiet dla precyzyjnego targetowania
+  precise_job:
+    runs-on: [self-hosted, linux, x64, gpu]
+    steps:
+      - name: Zadanie wymagające GPU
+        run: echo "Uruchamiam na dedykowanej maszynie z kartą graficzną"
