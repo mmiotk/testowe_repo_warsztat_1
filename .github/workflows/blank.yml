@@ -1,18 +1,60 @@
-# Workflow dla zmian w kodzie backendowym
-name: Backend Tests
 on:
-  push:
-    paths:
-      - 'server/**'           # Wszystko w katalogu server
-      - 'api/**'              # Wszystko w katalogu api
-      - 'database/**'         # Zmiany w bazie danych
-      - 'package.json'        # Zmiany w zależnościach
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Wybierz środowisko docelowe'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+        default: 'staging'
+
+      version:
+        description: 'Wersja do wdrożenia (np. v1.2.3 lub "latest")'
+        required: true
+        type: string
+        default: 'latest'
+
+      run_migrations:
+        description: 'Czy uruchomić migracje bazy danych?'
+        required: true
+        type: boolean
+        default: false
+
+      notify_team:
+        description: 'Powiadomić zespół o wdrożeniu?'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
-  test_backend:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Uruchom testy backendu
+      - name: Wyświetl parametry wdrożenia
         run: |
-          echo "Wykryto zmiany w backendzie, uruchamianie testów..."
-          echo "Sprawdzanie API, bazy danych i logiki biznesowej"
+          echo "🚀 Rozpoczynanie wdrożenia..."
+          echo "Środowisko: ${{ inputs.environment }}"
+          echo "Wersja: ${{ inputs.version }}"
+          echo "Migracje: ${{ inputs.run_migrations }}"
+          echo "Powiadomienia: ${{ inputs.notify_team }}"
+
+      - name: Walidacja środowiska produkcyjnego
+        if: inputs.environment == 'production'
+        run: |
+          echo "⚠️  UWAGA: Wdrożenie na PRODUKCJĘ!"
+          echo "Upewnij się, że wszystkie testy przeszły pomyślnie"
+
+      - name: Uruchom migracje bazy danych
+        if: inputs.run_migrations == true
+        run: |
+          echo "🗄️  Uruchamianie migracji bazy danych..."
+          echo "OSTRZEŻENIE: Ta operacja może być nieodwracalna!"
+
+      - name: Powiadom zespół
+        if: inputs.notify_team == true
+        run: |
+          echo "📢 Wysyłanie powiadomienia do zespołu..."
+          echo "Wdrożenie ${{ inputs.version }} na ${{ inputs.environment }} zostało rozpoczęte"
