@@ -1,17 +1,28 @@
-# Uruchamiaj przy różnych zdarzeniach - większa elastyczność
-on: [push, pull_request, release]
+on:
+  issues:
+    types:
+      - opened    # Nowe zgłoszenie - potrzebuje powitania
+      - labeled   # Dodano etykietę - może potrzebuje kategoryzacji
+      - closed    # Zamknięto - może potrzebuje archiwizacji
 
 jobs:
-  flexible_response:
+  respond_to_issue_lifecycle:
     runs-on: ubuntu-latest
     steps:
-      - name: Reaguj na różne sytuacje
+      - name: Powitaj nowych użytkowników
+        if: github.event.action == 'opened'
         run: |
-          echo "Workflow uruchomiony przez: ${{ github.event_name }}"
-          if [ "${{ github.event_name }}" == "push" ]; then
-            echo "Wykryto nowy kod w repozytorium"
-          elif [ "${{ github.event_name }}" == "pull_request" ]; then
-            echo "Ktoś chce scalić swoje zmiany"
-          elif [ "${{ github.event_name }}" == "release" ]; then
-            echo "Została utworzona nowa wersja"
-          fi
+          echo "Dziękujemy za zgłoszenie! Numer: ${{ github.event.issue.number }}"
+          echo "Autor: ${{ github.event.issue.user.login }}"
+
+      - name: Kategoryzuj na podstawie etykiety
+        if: github.event.action == 'labeled'
+        run: |
+          echo "Dodano etykietę: ${{ github.event.label.name }}"
+          echo "Do issue #${{ github.event.issue.number }}"
+
+      - name: Archiwizuj zamknięte zgłoszenia
+        if: github.event.action == 'closed'
+        run: |
+          echo "Issue #${{ github.event.issue.number }} zostało zamknięte"
+          echo "Powód: ${{ github.event.issue.state_reason }}"
