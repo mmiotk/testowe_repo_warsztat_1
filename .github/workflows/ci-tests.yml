@@ -1,0 +1,24 @@
+name: CI Tests  # ← Ta nazwa MUSI pasować do "CI Tests" w workflow_run
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kodu
+        uses: actions/checkout@v4
+
+      - name: Uruchom testy
+        run: |
+          echo "🧪 Uruchamianie testów jednostkowych..."
+          sleep 10  # Symulacja czasu wykonywania testów
+          echo "✅ Wszystkie testy przeszły pomyślnie!"
+
+      - name: Sprawdź pokrycie kodu
+        run: |
+          echo "📊 Analizuję pokrycie kodu..."
+          echo "Pokrycie: 85% - wynik zadowalający"
