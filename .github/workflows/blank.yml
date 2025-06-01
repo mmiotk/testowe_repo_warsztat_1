@@ -1,33 +1,25 @@
-name: Reakcja na inne workflow
-on:
-  workflow_run:
-    workflows: ["CI Tests", "Security Scan"]
-    types: [completed]
-    branches: [main, develop]
+name: Akcje społecznościowe
+on: [push]
 
 jobs:
-  deploy_after_success:
-    # Wdróż tylko jeśli poprzedni workflow się udał
-    if: github.event.workflow_run.conclusion == 'success'
+  community_actions_demo:
     runs-on: ubuntu-latest
     steps:
-      - name: Wdrożenie po testach
-        run: |
-          echo "Workflow '${WORKFLOW_NAME}' zakończony sukcesem"
-          echo "SHA: ${{ github.event.workflow_run.head_sha }}"
-          echo "Gałąź: ${{ github.event.workflow_run.head_branch }}"
-          echo "Rozpoczynam wdrożenie..."
-        env:
-          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+      - uses: actions/checkout@v4
 
-  investigate_failure:
-    if: github.event.workflow_run.conclusion == 'failure'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Analiza niepowodzenia
-        run: |
-          echo "Workflow '${WORKFLOW_NAME}' nie powiódł się"
-          echo "URL do niepowodzenia: ${{ github.event.workflow_run.html_url }}"
-          echo "Powiadamianie zespołu..."
-        env:
-          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+      # Akcja społecznościowa do analizy jakości kodu
+      - name: Analiza jakości kodu
+        uses: github/super-linter@v4
+        with:
+          # Parametry specyficzne dla tej akcji
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Ta akcja została stworzona przez GitHub, ale jest w osobnym repozytorium
+
+      # Inna popularna akcja społecznościowa
+      - name: Prześlij wyniki do Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+        # Ta akcja jest stworzona i utrzymywana przez firmę Codecov
