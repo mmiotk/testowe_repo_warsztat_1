@@ -1,21 +1,15 @@
 on:
   push:
+    branches: [main]
 
 jobs:
-  debug_event:
+  conditional_deployment:
     runs-on: ubuntu-latest
+    # Uruchom tylko jeśli commit zawiera słowo "deploy"
+    if: contains(github.event.head_commit.message, 'deploy')
     steps:
-      - name: Wyświetl pełny kontekst zdarzenia
-        env:
-          EVENT_CONTEXT: ${{ toJSON(github.event) }}
+      - name: Wdrażanie na podstawie commit message
         run: |
-          echo "📊 Pełne informacje o zdarzeniu:"
-          echo "$EVENT_CONTEXT" | jq '.' || echo "$EVENT_CONTEXT"
-
-      - name: Wyświetl podstawowe informacje o GitHub
-        run: |
-          echo "Repository: ${{ github.repository }}"
-          echo "Event name: ${{ github.event_name }}"
-          echo "Actor: ${{ github.actor }}"
-          echo "Ref: ${{ github.ref }}"
-          echo "SHA: ${{ github.sha }}"
+          echo "Wykryto słowo 'deploy' w commit message:"
+          echo "${{ github.event.head_commit.message }}"
+          echo "Rozpoczynam wdrożenie..."
