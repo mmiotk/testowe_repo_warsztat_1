@@ -1,25 +1,21 @@
-name: Akcje społecznościowe
+# .github/workflows/main.yml
+name: Demonstracja własnej akcji
 on: [push]
 
 jobs:
-  community_actions_demo:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Pobierz kod repozytorium
+        uses: actions/checkout@v4
 
-      # Akcja społecznościowa do analizy jakości kodu
-      - name: Analiza jakości kodu
-        uses: github/super-linter@v4
+      - name: Uruchom niestandardowe wdrożenie
+        id: deploy
+        uses: ./.github/actions/custom-deploy
         with:
-          # Parametry specyficzne dla tej akcji
-          DEFAULT_BRANCH: main
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # Ta akcja została stworzona przez GitHub, ale jest w osobnym repozytorium
+          environment: 'staging'
+          deployment-key: ${{ secrets.DEPLOY_KEY }}
 
-      # Inna popularna akcja społecznościowa
-      - name: Prześlij wyniki do Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
-        # Ta akcja jest stworzona i utrzymywana przez firmę Codecov
+      - name: Pokaż wynik wdrożenia
+        run: |
+          echo "Aplikacja wdrożona na: ${{ steps.deploy.outputs.deployment-url }}"

@@ -1,0 +1,25 @@
+# .github/actions/custom-deploy/action.yml
+name: 'Custom Deploy'
+description: 'Wdraża aplikację na określone środowisko'
+
+inputs:
+  environment:
+    description: 'Środowisko docelowe'
+    required: true
+
+  deployment-key:
+    description: 'Klucz SSH do wdrożenia'
+    required: true
+
+outputs:
+  deployment-url:
+    description: 'URL wdrożonej aplikacji'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Uruchom wdrożenie
+      shell: bash
+      run: |
+        chmod +x $GITHUB_ACTION_PATH/deploy.sh
+        $GITHUB_ACTION_PATH/deploy.sh "${{ inputs.environment }}" "${{ inputs.deployment-key }}"
