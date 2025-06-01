@@ -1,9 +1,6 @@
 on:
   issues:
-    types:
-      - opened    # Nowe zgłoszenie - potrzebuje powitania
-      - labeled   # Dodano etykietę - może potrzebuje kategoryzacji
-      - closed    # Zamknięto - może potrzebuje archiwizacji
+    types: [opened, labeled]
 
 jobs:
   respond_to_issue_lifecycle:
