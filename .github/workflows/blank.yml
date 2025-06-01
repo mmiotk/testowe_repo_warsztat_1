@@ -1,16 +1,18 @@
+# Workflow dla zmian w kodzie backendowym
+name: Backend Tests
 on:
   push:
-    branches:
-      - main              # Tylko główna gałąź
-      - develop           # Gałąź rozwojowa
-      - 'feature/*'       # Wszystkie gałęzie zaczynające się od "feature/"
-      - 'release/**'      # Wszystkie gałęzie release (wielopoziomowe)
+    paths:
+      - 'server/**'           # Wszystko w katalogu server
+      - 'api/**'              # Wszystko w katalogu api
+      - 'database/**'         # Zmiany w bazie danych
+      - 'package.json'        # Zmiany w zależnościach
 
 jobs:
-  build_for_important_branches:
+  test_backend:
     runs-on: ubuntu-latest
     steps:
-      - name: Buduj tylko ważny kod
+      - name: Uruchom testy backendu
         run: |
-          echo "Budowanie dla gałęzi: ${{ github.ref_name }}"
-          echo "To jest ważna gałąź, więc budujemy aplikację"
+          echo "Wykryto zmiany w backendzie, uruchamianie testów..."
+          echo "Sprawdzanie API, bazy danych i logiki biznesowej"
