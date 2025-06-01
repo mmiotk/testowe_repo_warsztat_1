@@ -22,7 +22,7 @@ jobs:
 
   # Tablica etykiet dla precyzyjnego targetowania
   precise_job:
-    runs-on: [self-hosted, macos-latest, x64, gpu]
+    runs-on: [self-hosted]
     steps:
       - name: Zadanie wymagające GPU
         run: echo "Uruchamiam na dedykowanej maszynie z kartą graficzną"
