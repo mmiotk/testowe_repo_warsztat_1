@@ -9,7 +9,7 @@ jobs:
     # Globalne ustawienie powłoki dla wszystkich kroków w tym zadaniu
     defaults:
       run:
-        shell: sh
+        shell: bash
 
     steps:
       - name: Instalacja bash w Alpine (jeśli potrzeba)
