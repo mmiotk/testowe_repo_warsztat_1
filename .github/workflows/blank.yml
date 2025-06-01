@@ -3,13 +3,26 @@ on:
     branches: [main]
 
 jobs:
-  conditional_deployment:
+  build:
     runs-on: ubuntu-latest
-    # Uruchom tylko jeśli commit zawiera słowo "deploy"
-    if: contains(github.event.head_commit.message, 'deploy')
     steps:
-      - name: Wdrażanie na podstawie commit message
+      - name: Zbuduj aplikację
+        run: echo "Budowanie aplikacji..."
+
+  deploy_staging:
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: staging      # Automatyczne wdrożenie
+    steps:
+      - name: Wdróż na staging
+        run: echo "Automatyczne wdrożenie na staging"
+
+  deploy_production:
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: production   # Wymaga ręcznego zatwierdzenia
+    steps:
+      - name: Wdróż na produkcję
         run: |
-          echo "Wykryto słowo 'deploy' w commit message:"
-          echo "${{ github.event.head_commit.message }}"
-          echo "Rozpoczynam wdrożenie..."
+          echo "Wdrożenie na produkcję po zatwierdzeniu przez team lead"
+          echo "Ta operacja była monitorowana i zatwierdzona"
