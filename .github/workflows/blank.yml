@@ -1,45 +1,33 @@
-name: Komunikacja z akcjami
-on: [push]
+name: Testy z pokryciem kodu
+on: [push, pull_request]
 
 jobs:
-  inputs_outputs_demo:
+  test_with_coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Pobierz kod
+        uses: actions/checkout@v4
 
-      # Akcja z wieloma parametrami wejściowymi
-      - name: Skonfiguruj środowisko Python
-        uses: actions/setup-python@v4
+      - name: Skonfiguruj Node.js
+        uses: actions/setup-node@v4
         with:
-          # Wymagany parametr - wersja Python
-          python-version: '3.9'
-          # Opcjonalny parametr - włącz cache
-          cache: 'pip'
-          # Opcjonalny parametr - plik z wymaganiami
-          cache-dependency-path: 'requirements.txt'
-          # Opcjonalny parametr - architektura
-          architecture: 'x64'
-        # Każdy parametr w sekcji 'with' jest przekazywany do akcji
+          node-version: '18'
+          cache: 'npm'
 
-      - name: Akcja generująca dane wyjściowe
-        id: build-info
-        uses: actions/github-script@v7
+      - name: Zainstaluj zależności
+        run: npm ci
+
+      - name: Uruchom testy z pokryciem
+        run: npm run test:coverage
+        # Generuje pliki pokrycia (np. coverage/lcov.info)
+
+      # Akcja społecznościowa do przesłania wyników pokrycia
+      - name: Prześlij pokrycie do Codecov
+        uses: codecov/codecov-action@v3
         with:
-          script: |
-            const buildTime = new Date().toISOString();
-            const buildNumber = context.runNumber;
-            
-            // Ustawianie outputs dla użycia w kolejnych krokach
-            core.setOutput('build-time', buildTime);
-            core.setOutput('build-number', buildNumber);
-            
-            return `Build ${buildNumber} started at ${buildTime}`;
-        # Ta akcja produkuje dane wyjściowe, które możemy użyć później
-
-      # Krok używający danych z poprzedniej akcji
-      - name: Użyj danych z poprzedniej akcji
-        run: |
-          echo "Czas buildu: ${{ steps.build-info.outputs.build-time }}"
-          echo "Numer buildu: ${{ steps.build-info.outputs.build-number }}"
-          echo "Pełny wynik: ${{ steps.build-info.outputs.result }}"
-        # Składnia steps.ID.outputs.NAZWA pozwala na dostęp do wyników
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+        # Ta akcja automatycznie znajduje i przesyła pliki pokrycia
