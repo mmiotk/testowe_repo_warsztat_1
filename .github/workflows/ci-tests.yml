@@ -1,43 +1,50 @@
-name: Równoległe przetwarzanie zadań
+name: Kontrolowana sekwencja zadań
 on: [push]
 
 jobs:
-  frontend_tests:
-    name: "Testy frontendu"
+  validate_code:
+    name: "Walidacja kodu źródłowego"
     runs-on: ubuntu-latest
     steps:
-      - name: Setup i testy React
+      - name: Sprawdź składnię i styl
         run: |
-          echo "⚡ START: $(date '+%H:%M:%S') - Testy frontendu"
-          sleep 30  # Symulacja 30 sekund testów React
-          echo "✅ KONIEC: $(date '+%H:%M:%S') - Frontend przetestowany"
+          echo "🔍 Walidacja kodu: sprawdzanie składni, ESLint, Prettier"
+          echo "Czas rozpoczęcia: $(date '+%H:%M:%S')"
+          sleep 15
+          echo "✅ Kod jest poprawny i zgodny ze standardami"
 
-  backend_tests:
-    name: "Testy backendu"
+  run_tests:
+    name: "Wykonanie testów"
+    needs: validate_code    # Czeka na zakończenie validate_code
     runs-on: ubuntu-latest
     steps:
-      - name: Setup i testy API
+      - name: Testy jednostkowe i integracyjne
         run: |
-          echo "⚡ START: $(date '+%H:%M:%S') - Testy backendu"
-          sleep 45  # Symulacja 45 sekund testów API
-          echo "✅ KONIEC: $(date '+%H:%M:%S') - Backend przetestowany"
+          echo "🧪 Uruchamianie testów po pomyślnej walidacji"
+          echo "Czas rozpoczęcia: $(date '+%H:%M:%S')"
+          sleep 25
+          echo "✅ Wszystkie testy przeszły pomyślnie"
 
-  security_scan:
-    name: "Skanowanie bezpieczeństwa"
+  build_artifacts:
+    name: "Budowanie artefaktów"
+    needs: run_tests       # Czeka na zakończenie run_tests
     runs-on: ubuntu-latest
     steps:
-      - name: Analiza podatności
+      - name: Kompilacja i pakowanie
         run: |
-          echo "⚡ START: $(date '+%H:%M:%S') - Skanowanie bezpieczeństwa"
-          sleep 20  # Symulacja 20 sekund skanowania
-          echo "✅ KONIEC: $(date '+%H:%M:%S') - Bezpieczeństwo sprawdzone"
+          echo "🏗️ Budowanie aplikacji po pomyślnych testach"
+          echo "Czas rozpoczęcia: $(date '+%H:%M:%S')"
+          sleep 20
+          echo "✅ Artefakty zostały zbudowane"
 
-  performance_analysis:
-    name: "Analiza wydajności"
+  deploy_staging:
+    name: "Wdrożenie na staging"
+    needs: build_artifacts # Czeka na zakończenie build_artifacts
     runs-on: ubuntu-latest
     steps:
-      - name: Benchmarki i profiling
+      - name: Wdrożenie na środowisko testowe
         run: |
-          echo "⚡ START: $(date '+%H:%M:%S') - Analiza wydajności"
-          sleep 60  # Symulacja 60 sekund analizy wydajności
-          echo "✅ KONIEC: $(date '+%H:%M:%S') - Wydajność przeanalizowana"
+          echo "🚀 Wdrażanie na staging po zbudowaniu artefaktów"
+          echo "Czas rozpoczęcia: $(date '+%H:%M:%S')"
+          sleep 10
+          echo "✅ Aplikacja wdrożona na staging"
