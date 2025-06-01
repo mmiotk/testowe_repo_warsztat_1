@@ -8,6 +8,6 @@
     "test": "echo \"No tests defined, but CI runs client.js\""
   },
   "dependencies": {
-    "pg": "^8.12.0"
+    "pg": "^8.11.0"
   }
 }
