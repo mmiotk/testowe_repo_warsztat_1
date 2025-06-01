@@ -1,18 +1,49 @@
-name: Podstawowe użycie kontenera
-on: [push, pull_request]
+name: Zarządzanie powłokami w kontenerach
+on: [push]
 
 jobs:
-  simple_container_job:
+  shell_comparison:
     runs-on: ubuntu-latest
-    # Najprostsza forma - tylko nazwa obrazu
-    container: node:18
+    container: alpine:latest  # Alpine Linux używa sh jako domyślnej powłoki
+
+    # Globalne ustawienie powłoki dla wszystkich kroków w tym zadaniu
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      - name: Sprawdź środowisko Node.js
+      - name: Instalacja bash w Alpine (jeśli potrzeba)
         run: |
-          # Ten kod uruchamia się wewnątrz kontenera node:18
-          echo "Sprawdzam wersję Node.js w kontenerze:"
-          node --version
-          echo "Sprawdzam wersję npm:"
-          npm --version
-          echo "Sprawdzam czy jestem w kontenerze:"
-          ls /.dockerenv && echo "✅ Jestem w kontenerze!" || echo "❌ Nie jestem w kontenerze"
+          # Alpine domyślnie ma tylko sh, więc instalujemy bash
+          apk add --no-cache bash
+          echo "✅ Bash został zainstalowany"
+
+      - name: Test funkcji bash (dzięki globalnej konfiguracji)
+        run: |
+          # Te funkcje działają tylko w bash, nie w sh
+          echo "🐚 Testowanie zaawansowanych funkcji bash:"
+          
+          # Tablice (niedostępne w sh)
+          fruits=("apple" "banana" "cherry")
+          echo "Owoce: ${fruits[@]}"
+          
+          # Zaawansowane rozwijanie zmiennych
+          filename="report.txt"
+          echo "Nazwa bez rozszerzenia: ${filename%.txt}"
+          
+          # Operatory logiczne bash
+          [[ -f "/.dockerenv" ]] && echo "✅ W kontenerze" || echo "❌ Poza kontenerem"
+
+      - name: Przykład z lokalnym przełącznikiem powłoki
+        shell: sh  # Ten konkretny krok używa sh mimo globalnej konfiguracji bash
+        run: |
+          # Kod kompatybilny z sh (podstawowa powłoka POSIX)
+          echo "🔧 Uruchamiam w sh - podstawowa funkcjonalność:"
+          echo "Zmienna HOME: $HOME"
+          echo "Lista plików:"
+          ls -la /
+          
+          # Unikamy funkcji specyficznych dla bash
+          if [ -f "/.dockerenv" ]; then
+            echo "✅ W kontenerze (sprawdzenie kompatybilne z sh)"
+          fi
