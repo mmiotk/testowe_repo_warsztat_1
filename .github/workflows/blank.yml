@@ -1,60 +1,21 @@
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Wybierz środowisko docelowe'
-        required: true
-        type: choice
-        options:
-          - development
-          - staging
-          - production
-        default: 'staging'
-
-      version:
-        description: 'Wersja do wdrożenia (np. v1.2.3 lub "latest")'
-        required: true
-        type: string
-        default: 'latest'
-
-      run_migrations:
-        description: 'Czy uruchomić migracje bazy danych?'
-        required: true
-        type: boolean
-        default: false
-
-      notify_team:
-        description: 'Powiadomić zespół o wdrożeniu?'
-        required: false
-        type: boolean
-        default: true
+  push:
 
 jobs:
-  deploy:
+  debug_event:
     runs-on: ubuntu-latest
     steps:
-      - name: Wyświetl parametry wdrożenia
+      - name: Wyświetl pełny kontekst zdarzenia
+        env:
+          EVENT_CONTEXT: ${{ toJSON(github.event) }}
         run: |
-          echo "🚀 Rozpoczynanie wdrożenia..."
-          echo "Środowisko: ${{ inputs.environment }}"
-          echo "Wersja: ${{ inputs.version }}"
-          echo "Migracje: ${{ inputs.run_migrations }}"
-          echo "Powiadomienia: ${{ inputs.notify_team }}"
+          echo "📊 Pełne informacje o zdarzeniu:"
+          echo "$EVENT_CONTEXT" | jq '.' || echo "$EVENT_CONTEXT"
 
-      - name: Walidacja środowiska produkcyjnego
-        if: inputs.environment == 'production'
+      - name: Wyświetl podstawowe informacje o GitHub
         run: |
-          echo "⚠️  UWAGA: Wdrożenie na PRODUKCJĘ!"
-          echo "Upewnij się, że wszystkie testy przeszły pomyślnie"
-
-      - name: Uruchom migracje bazy danych
-        if: inputs.run_migrations == true
-        run: |
-          echo "🗄️  Uruchamianie migracji bazy danych..."
-          echo "OSTRZEŻENIE: Ta operacja może być nieodwracalna!"
-
-      - name: Powiadom zespół
-        if: inputs.notify_team == true
-        run: |
-          echo "📢 Wysyłanie powiadomienia do zespołu..."
-          echo "Wdrożenie ${{ inputs.version }} na ${{ inputs.environment }} zostało rozpoczęte"
+          echo "Repository: ${{ github.repository }}"
+          echo "Event name: ${{ github.event_name }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "SHA: ${{ github.sha }}"
