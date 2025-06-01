@@ -1,28 +1,36 @@
+name: Inteligentne reagowanie na typ zdarzenia
 on:
   push:
-    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '0 2 * * *'  # Codziennie o 2:00
 
 jobs:
   build:
+    # Uruchom dla push i PR, ale nie dla zaplanowanych uruchomień
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
-      - name: Zbuduj aplikację
-        run: echo "Budowanie aplikacji..."
-
-  deploy_staging:
-    needs: [build]
-    runs-on: ubuntu-latest
-    environment: staging      # Automatyczne wdrożenie
-    steps:
-      - name: Wdróż na staging
-        run: echo "Automatyczne wdrożenie na staging"
-
-  deploy_production:
-    needs: [build]
-    runs-on: ubuntu-latest
-    environment: production   # Wymaga ręcznego zatwierdzenia
-    steps:
-      - name: Wdróż na produkcję
+      - name: Buduj aplikację
         run: |
-          echo "Wdrożenie na produkcję po zatwierdzeniu przez team lead"
-          echo "Ta operacja była monitorowana i zatwierdzona"
+            echo "Rozpoczynam budowanie aplikacji"
+            echo "Typ zdarzenia: ${{ github.event_name }}"
+            echo "Repozytorium: ${{ github.repository }}"
+            echo "Gałąź/tag: ${{ github.ref_name }}"
+  nightly-cleanup:
+    # Uruchom tylko dla zaplanowanych nocnych zadań
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Nocne porządki
+        run: |
+          echo "Uruchamianie nocnego czyszczenia"
+          echo "Usuwanie starych logów i cache"
+
+  security-scan:
+    # Uruchom tylko dla pull requestów od zewnętrznych kontrybutorów
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skanowanie bezpieczeństwa
+        run: echo "Dodatkowe sprawdzenie bezpieczeństwa dla zewnętrznego PR"
