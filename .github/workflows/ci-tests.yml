@@ -22,7 +22,7 @@ on:
 jobs:
   adaptive_deployment:
     # Kombinacja stałych etykiet ze zmiennymi z parametrów wejściowych
-    runs-on: [self-hosted, "${{ inputs.target_os }}", "${{ inputs.performance_tier }}"]
+    runs-on: [self-hosted, "${{ inputs.target_os }}", "X64"]
     steps:
       - name: Wyświetl informacje o środowisku
         run: |
