@@ -1,49 +1,71 @@
-name: Zarządzanie powłokami w kontenerach
+name: Poprawne zarządzanie powłokami w kontenerach
 on: [push]
 
 jobs:
-  shell_comparison:
+  shell_progression:
     runs-on: ubuntu-latest
-    container: alpine:latest  # Alpine Linux używa sh jako domyślnej powłoki
-
-    # Globalne ustawienie powłoki dla wszystkich kroków w tym zadaniu
-    defaults:
-      run:
-        shell: bash
+    container: alpine:latest
 
     steps:
-      - name: Instalacja bash w Alpine (jeśli potrzeba)
+      - name: Instalacja bash używając sh
+        # Nie ustawiamy `shell: bash` - używamy domyślnej powłoki sh
         run: |
-          # Alpine domyślnie ma tylko sh, więc instalujemy bash
+          echo "🔧 Instaluję bash używając powłoki sh..."
+          # W Alpine Linux sh jest dostępne domyślnie
           apk add --no-cache bash
           echo "✅ Bash został zainstalowany"
+          
+          # Sprawdźmy czy bash jest teraz dostępny
+          which bash && echo "🎯 Bash znaleziony w: $(which bash)"
+          
+          # Sprawdźmy wersję bash
+          bash --version | head -1
 
-      - name: Test funkcji bash (dzięki globalnej konfiguracji)
+      - name: Teraz możemy używać bash globalnie
+        shell: bash  # Teraz bash jest już zainstalowany, więc możemy go używać
         run: |
-          # Te funkcje działają tylko w bash, nie w sh
           echo "🐚 Testowanie zaawansowanych funkcji bash:"
           
-          # Tablice (niedostępne w sh)
-          fruits=("apple" "banana" "cherry")
-          echo "Owoce: ${fruits[@]}"
+          # Tablice - funkcja dostępna tylko w bash
+          fruits=("apple" "banana" "cherry" "date")
+          echo "Lista owoców: ${fruits[@]}"
+          echo "Pierwszy owoc: ${fruits[0]}"
+          echo "Liczba owoców: ${#fruits[@]}"
           
           # Zaawansowane rozwijanie zmiennych
           filename="report.txt"
+          echo "Pełna nazwa: $filename"
           echo "Nazwa bez rozszerzenia: ${filename%.txt}"
+          echo "Tylko rozszerzenie: ${filename##*.}"
           
-          # Operatory logiczne bash
-          [[ -f "/.dockerenv" ]] && echo "✅ W kontenerze" || echo "❌ Poza kontenerem"
+          # Operator sprawdzania plików specyficzny dla bash
+          [[ -f "/.dockerenv" ]] && echo "✅ Jestem w kontenerze Docker" || echo "❌ Nie jestem w kontenerze"
+          
+          # Test złożonych warunków bash
+          [[ ${#fruits[@]} -gt 3 ]] && echo "✅ Mamy więcej niż 3 owoce" || echo "❌ Mamy 3 lub mniej owoców"
 
-      - name: Przykład z lokalnym przełącznikiem powłoki
-        shell: sh  # Ten konkretny krok używa sh mimo globalnej konfiguracji bash
+      - name: Porównanie z sh dla edukacji
+        shell: sh  # Celowo używamy sh żeby pokazać różnice
         run: |
-          # Kod kompatybilny z sh (podstawowa powłoka POSIX)
-          echo "🔧 Uruchamiam w sh - podstawowa funkcjonalność:"
-          echo "Zmienna HOME: $HOME"
-          echo "Lista plików:"
-          ls -la /
+          echo "🔧 Uruchamiam w sh - podstawowa funkcjonalność POSIX:"
           
-          # Unikamy funkcji specyficznych dla bash
+          # W sh nie możemy używać tablic jak w bash
+          # fruits=("apple" "banana")  # To by nie działało w sh!
+          
+          # Zamiast tego używamy prostych zmiennych
+          fruits="apple banana cherry date"
+          echo "Owoce jako string: $fruits"
+          
+          # Podstawowe sprawdzanie plików (kompatybilne z POSIX)
           if [ -f "/.dockerenv" ]; then
             echo "✅ W kontenerze (sprawdzenie kompatybilne z sh)"
+          else
+            echo "❌ Poza kontenerem"
           fi
+          
+          # Pokazanie różnic w składni
+          echo "🎓 Różnice między sh a bash:"
+          echo "- sh: używa [ ] do warunków"
+          echo "- bash: może używać [[ ]] z dodatkowymi funkcjami"
+          echo "- sh: nie ma tablic"
+          echo "- bash: ma zaawansowane tablice i funkcje string"
