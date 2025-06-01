@@ -1,25 +1,43 @@
-name: Przykład zarządzania zespołem zadań
-on: [push, pull_request]
+name: Równoległe przetwarzanie zadań
+on: [push]
 
 jobs:
-  # Identyfikator zadania: musi być unikalny i opisowy
-  code_quality_check:
-    name: "Sprawdzenie jakości kodu"    # Nazwa wyświetlana w interfejsie GitHub
+  frontend_tests:
+    name: "Testy frontendu"
     runs-on: ubuntu-latest
     steps:
-      - name: Analiza kodu
-        run: echo "Sprawdzanie stylu kodu, linting, bezpieczeństwo"
+      - name: Setup i testy React
+        run: |
+          echo "⚡ START: $(date '+%H:%M:%S') - Testy frontendu"
+          sleep 30  # Symulacja 30 sekund testów React
+          echo "✅ KONIEC: $(date '+%H:%M:%S') - Frontend przetestowany"
 
-  unit_tests:
-    name: "Testy jednostkowe"           # Czytelna nazwa dla zespołu
+  backend_tests:
+    name: "Testy backendu"
     runs-on: ubuntu-latest
     steps:
-      - name: Uruchom testy
-        run: echo "Wykonywanie testów jednostkowych i integracyjnych"
+      - name: Setup i testy API
+        run: |
+          echo "⚡ START: $(date '+%H:%M:%S') - Testy backendu"
+          sleep 45  # Symulacja 45 sekund testów API
+          echo "✅ KONIEC: $(date '+%H:%M:%S') - Backend przetestowany"
 
-  build_application:
-    name: "Budowanie aplikacji"         # Jasne określenie celu zadania
+  security_scan:
+    name: "Skanowanie bezpieczeństwa"
     runs-on: ubuntu-latest
     steps:
-      - name: Kompilacja
-        run: echo "Budowanie finalnej wersji aplikacji"
+      - name: Analiza podatności
+        run: |
+          echo "⚡ START: $(date '+%H:%M:%S') - Skanowanie bezpieczeństwa"
+          sleep 20  # Symulacja 20 sekund skanowania
+          echo "✅ KONIEC: $(date '+%H:%M:%S') - Bezpieczeństwo sprawdzone"
+
+  performance_analysis:
+    name: "Analiza wydajności"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Benchmarki i profiling
+        run: |
+          echo "⚡ START: $(date '+%H:%M:%S') - Analiza wydajności"
+          sleep 60  # Symulacja 60 sekund analizy wydajności
+          echo "✅ KONIEC: $(date '+%H:%M:%S') - Wydajność przeanalizowana"
