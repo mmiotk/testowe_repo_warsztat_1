@@ -1,23 +1,37 @@
-name: Warunkowe wdrożenie
+name: Zaawansowane warunki składniowe
 on: [push, pull_request]
 
 jobs:
-  tests:
+  tag-deployment:
+    # POPRAWNE: Używanie ${{ }} dla wyrażeń zaczynających się od !
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Uruchom testy
-        run: echo "Testy zawsze się uruchamiają"
+      - name: Wdrożenie bez tagów
+        run: echo "To nie jest tag, można wdrażać"
 
-  production-deploy:
-    # Wdróż tylko gdy push jest do głównej gałęzi w konkretnym repozytorium
-    if: github.repository == 'moja-firma/aplikacja-produkcyjna' && github.ref == 'refs/heads/main'
-    needs: tests
+  feature-branch-tests:
+    # POPRAWNE: Możesz pominąć ${{ }} w prostych przypadkach
+    if: startsWith(github.ref, 'refs/heads/feature/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Wdrożenie na produkcję
+      - name: Testy gałęzi funkcjonalności
+        run: echo "Testowanie gałęzi feature"
+
+  complex-condition:
+    # POPRAWNE: Złożone warunki z logicznymi operatorami
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/develop'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wdrożenie dla głównych gałęzi
         run: |
-          echo "Wdrażanie do środowiska produkcyjnego"
-          echo "Repozytorium: ${{ github.repository }}"
-          echo "Gałąź: ${{ github.ref }}"
+          echo "Wdrażanie dla gałęzi: ${{ github.ref_name }}"
+          echo "To jest jedna z głównych gałęzi rozwojowych"
+
+  escaped-condition:
+    # POPRAWNE: Alternatywne sposoby escapowania
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Uruchom jeśli nie ma skip ci
+        run: echo "Commit nie zawiera [skip ci], kontynuuję"
