@@ -1,71 +1,72 @@
-name: Poprawne zarządzanie powłokami w kontenerach
+name: Zaawansowane zarządzanie woluminami
 on: [push]
 
 jobs:
-  shell_progression:
+  volume_demonstration:
     runs-on: ubuntu-latest
-    container: alpine:latest
+    container:
+      image: node:18
+      volumes:
+        # Cache npm dla przyspieszenia instalacji zależności
+        - npm_cache:/root/.npm
+        # Współdzielenie artefaktów buildu między krokami
+        - build_output:/app/dist
+        # Logi do debugowania (mapowanie z hosta)
+        - /tmp/github_actions_logs:/app/logs
+        # Tymczasowe pliki robocze
+        - workspace:/workspace
 
     steps:
-      - name: Instalacja bash używając sh
-        # Nie ustawiamy `shell: bash` - używamy domyślnej powłoki sh
+      - name: Przygotowanie środowiska i cache
         run: |
-          echo "🔧 Instaluję bash używając powłoki sh..."
-          # W Alpine Linux sh jest dostępne domyślnie
-          apk add --no-cache bash
-          echo "✅ Bash został zainstalowany"
+          echo "📦 Przygotowanie cache i workspace:"
           
-          # Sprawdźmy czy bash jest teraz dostępny
-          which bash && echo "🎯 Bash znaleziony w: $(which bash)"
+          # Sprawdź dostępne woluminy
+          echo "Dostępne punkty montowania:"
+          mount | grep -E "/root/.npm|/app/dist|/app/logs|/workspace"
           
-          # Sprawdźmy wersję bash
-          bash --version | head -1
+          # Przygotuj strukturę katalogów
+          mkdir -p /app/dist /app/logs /workspace/temp
+          
+          echo "✅ Środowisko przygotowane"
 
-      - name: Teraz możemy używać bash globalnie
-        shell: bash  # Teraz bash jest już zainstalowany, więc możemy go używać
+      - name: Symulacja budowania z wykorzystaniem cache
         run: |
-          echo "🐚 Testowanie zaawansowanych funkcji bash:"
+          echo "🏗️ Budowanie aplikacji z cache npm:"
           
-          # Tablice - funkcja dostępna tylko w bash
-          fruits=("apple" "banana" "cherry" "date")
-          echo "Lista owoców: ${fruits[@]}"
-          echo "Pierwszy owoc: ${fruits[0]}"
-          echo "Liczba owoców: ${#fruits[@]}"
-          
-          # Zaawansowane rozwijanie zmiennych
-          filename="report.txt"
-          echo "Pełna nazwa: $filename"
-          echo "Nazwa bez rozszerzenia: ${filename%.txt}"
-          echo "Tylko rozszerzenie: ${filename##*.}"
-          
-          # Operator sprawdzania plików specyficzny dla bash
-          [[ -f "/.dockerenv" ]] && echo "✅ Jestem w kontenerze Docker" || echo "❌ Nie jestem w kontenerze"
-          
-          # Test złożonych warunków bash
-          [[ ${#fruits[@]} -gt 3 ]] && echo "✅ Mamy więcej niż 3 owoce" || echo "❌ Mamy 3 lub mniej owoców"
-
-      - name: Porównanie z sh dla edukacji
-        shell: sh  # Celowo używamy sh żeby pokazać różnice
-        run: |
-          echo "🔧 Uruchamiam w sh - podstawowa funkcjonalność POSIX:"
-          
-          # W sh nie możemy używać tablic jak w bash
-          # fruits=("apple" "banana")  # To by nie działało w sh!
-          
-          # Zamiast tego używamy prostych zmiennych
-          fruits="apple banana cherry date"
-          echo "Owoce jako string: $fruits"
-          
-          # Podstawowe sprawdzanie plików (kompatybilne z POSIX)
-          if [ -f "/.dockerenv" ]; then
-            echo "✅ W kontenerze (sprawdzenie kompatybilne z sh)"
+          # Sprawdź czy cache npm istnieje
+          if [ -d "/root/.npm" ] && [ "$(ls -A /root/.npm)" ]; then
+            echo "✅ Cache npm znaleziony - przyspieszona instalacja"
+            ls -la /root/.npm | head -5
           else
-            echo "❌ Poza kontenerem"
+            echo "📥 Cache npm pusty - pierwsza instalacja"
           fi
           
-          # Pokazanie różnic w składni
-          echo "🎓 Różnice między sh a bash:"
-          echo "- sh: używa [ ] do warunków"
-          echo "- bash: może używać [[ ]] z dodatkowymi funkcjami"
-          echo "- sh: nie ma tablic"
-          echo "- bash: ma zaawansowane tablice i funkcje string"
+          # Symulacja npm install (która wykorzysta cache)
+          echo "Instalowanie zależności..."
+          touch /root/.npm/fake-package-cache
+          
+          # Symulacja procesu budowania
+          echo "Kompilowanie aplikacji..."
+          echo "Build output $(date)" > /app/dist/bundle.js
+          echo "Source maps $(date)" > /app/dist/bundle.js.map
+          
+          echo "📊 Logi buildu:" > /app/logs/build.log
+          echo "Build completed at $(date)" >> /app/logs/build.log
+
+      - name: Weryfikacja artefaktów i cleanup
+        run: |
+          echo "🔍 Weryfikacja wygenerowanych artefaktów:"
+          
+          echo "Pliki w /app/dist:"
+          ls -la /app/dist/
+          
+          echo "Zawartość bundle.js:"
+          cat /app/dist/bundle.js
+          
+          echo "Logi buildu:"
+          cat /app/logs/build.log
+          
+          echo "🧹 Cleanup workspace:"
+          rm -rf /workspace/temp/*
+          echo "Workspace wyczyszczony, ale dane w /app/dist pozostają dla kolejnych kroków"
