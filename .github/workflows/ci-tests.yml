@@ -1,85 +1,32 @@
-name: Odporna na błędy architektura workflow
-on: [push]
+name: Nauka używania akcji z Marketplace
+on: [push, pull_request]
 
 jobs:
-  critical_validation:
-    name: "Krytyczna walidacja"
+  demo_marketplace_action:
     runs-on: ubuntu-latest
     steps:
-      - name: Sprawdzenia, które muszą się udać
-        run: |
-          echo "🎯 Krytyczna walidacja: podstawowe sprawdzenia"
-          # Symulacja czasami niepowodzenia
-          if [ $((RANDOM % 3)) -eq 0 ]; then
-            echo "❌ Krytyczny błąd wykryty!"
-            exit 1
-          fi
-          echo "✅ Krytyczna walidacja przeszła pomyślnie"
+      # Krok 1: Zawsze zacznij od pobrania kodu źródłowego
+      - name: Pobierz kod z repozytorium
+        uses: actions/checkout@v4
+        # Ta akcja jest tak fundamentalna, że jest używana w 99% workflow
+        # Jest rozwijana i utrzymywana bezpośrednio przez GitHub
 
-  optional_analysis:
-    name: "Opcjonalna analiza"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Dodatkowe sprawdzenia
-        run: |
-          echo "📊 Opcjonalna analiza: dodatkowe metryki"
-          # Symulacja czasami niepowodzenia
-          if [ $((RANDOM % 2)) -eq 0 ]; then
-            echo "⚠️ Analiza nie powiodła się, ale to nie jest krytyczne"
-            exit 1
-          fi
-          echo "✅ Analiza zakończona sukcesem"
+      # Krok 2: Skonfiguruj środowisko Node.js
+      - name: Przygotuj środowisko Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Parametr wejściowy specyfikujący wersję Node.js
+          node-version: '18'
+          # Opcjonalny parametr włączający cache dla npm
+          cache: 'npm'
+        # Ta akcja automatycznie pobiera i instaluje określoną wersję Node.js
+        # Dodatkowo konfiguruje PATH i zmienne środowiskowe
 
-  conditional_deployment:
-    name: "Wdrożenie warunkowe"
-    # Używa always() żeby uruchomić się niezależnie od wyników poprzedników
-    if: always()
-    needs: [critical_validation, optional_analysis]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Analiza wyników i decyzja o wdrożeniu
+      # Krok 3: Teraz możesz używać Node.js i npm
+      - name: Sprawdź zainstalowane wersje
         run: |
-          echo "🤔 Analizuję wyniki poprzednich zadań:"
-          
-          # Sprawdź status krytycznej walidacji
-          if [ "${{ needs.critical_validation.result }}" = "success" ]; then
-            echo "✅ Krytyczna walidacja: SUKCES"
-            critical_ok=true
-          else
-            echo "❌ Krytyczna walidacja: NIEPOWODZENIE"
-            critical_ok=false
-          fi
-          
-          # Sprawdź status opcjonalnej analizy
-          if [ "${{ needs.optional_analysis.result }}" = "success" ]; then
-            echo "✅ Opcjonalna analiza: SUKCES"
-            analysis_ok=true
-          else
-            echo "⚠️ Opcjonalna analiza: NIEPOWODZENIE (ale to OK)"
-            analysis_ok=false
-          fi
-          
-          # Podejmij decyzję o wdrożeniu
-          if [ "$critical_ok" = "true" ]; then
-            echo "🚀 DECYZJA: Wdrażam - krytyczne sprawdzenia przeszły"
-            echo "Dodatkowe informacje: analiza opcjonalna $([ "$analysis_ok" = "true" ] && echo "również przeszła" || echo "nie powiodła się, ale to nie blokuje wdrożenia")"
-          else
-            echo "🛑 DECYZJA: Nie wdrażam - krytyczne sprawdzenia nie przeszły"
-            exit 1
-          fi
-
-  notification_always:
-    name: "Powiadomienie zespołu"
-    if: always()  # Zawsze uruchom, niezależnie od wyników
-    needs: [critical_validation, optional_analysis, conditional_deployment]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Podsumowanie i powiadomienie
-        run: |
-          echo "📧 Wysyłanie podsumowania do zespołu:"
-          echo "Krytyczna walidacja: ${{ needs.critical_validation.result }}"
-          echo "Opcjonalna analiza: ${{ needs.optional_analysis.result }}"
-          echo "Wdrożenie: ${{ needs.conditional_deployment.result }}"
-          
-          # W rzeczywistości tutaj wysłałbyś powiadomienie na Slack, email, itp.
-          echo "✉️ Powiadomienie wysłane do kanału #deployments"
+          echo "Sprawdzamy co zostało zainstalowane przez akcję:"
+          node --version
+          npm --version
+          echo "Sprawdzamy czy cache npm działa:"
+          npm config get cache
