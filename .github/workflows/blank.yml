@@ -1,36 +1,23 @@
-name: Inteligentne reagowanie na typ zdarzenia
-on:
-  push:
-  pull_request:
-  schedule:
-    - cron: '0 2 * * *'  # Codziennie o 2:00
+name: Warunkowe wdrożenie
+on: [push, pull_request]
 
 jobs:
-  build:
-    # Uruchom dla push i PR, ale nie dla zaplanowanych uruchomień
-    if: github.event_name != 'schedule'
+  tests:
     runs-on: ubuntu-latest
     steps:
-      - name: Buduj aplikację
-        run: |
-            echo "Rozpoczynam budowanie aplikacji"
-            echo "Typ zdarzenia: ${{ github.event_name }}"
-            echo "Repozytorium: ${{ github.repository }}"
-            echo "Gałąź/tag: ${{ github.ref_name }}"
-  nightly-cleanup:
-    # Uruchom tylko dla zaplanowanych nocnych zadań
-    if: github.event_name == 'schedule'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Nocne porządki
-        run: |
-          echo "Uruchamianie nocnego czyszczenia"
-          echo "Usuwanie starych logów i cache"
+      - uses: actions/checkout@v4
+      - name: Uruchom testy
+        run: echo "Testy zawsze się uruchamiają"
 
-  security-scan:
-    # Uruchom tylko dla pull requestów od zewnętrznych kontrybutorów
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == true
+  production-deploy:
+    # Wdróż tylko gdy push jest do głównej gałęzi w konkretnym repozytorium
+    if: github.repository == 'moja-firma/aplikacja-produkcyjna' && github.ref == 'refs/heads/main'
+    needs: tests
     runs-on: ubuntu-latest
     steps:
-      - name: Skanowanie bezpieczeństwa
-        run: echo "Dodatkowe sprawdzenie bezpieczeństwa dla zewnętrznego PR"
+      - uses: actions/checkout@v4
+      - name: Wdrożenie na produkcję
+        run: |
+          echo "Wdrażanie do środowiska produkcyjnego"
+          echo "Repozytorium: ${{ github.repository }}"
+          echo "Gałąź: ${{ github.ref }}"
