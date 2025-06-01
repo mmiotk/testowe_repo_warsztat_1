@@ -1,18 +1,33 @@
-name: Reakcje na sprawdzenia kodu
+name: Reakcja na inne workflow
 on:
-  check_run:
-    types: [completed, rerequested]
+  workflow_run:
+    workflows: ["CI Tests", "Security Scan"]
+    types: [completed]
+    branches: [main, develop]
 
 jobs:
-  analyze_check_results:
+  deploy_after_success:
+    # Wdróż tylko jeśli poprzedni workflow się udał
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Analizuj wyniki sprawdzeń
+      - name: Wdrożenie po testach
         run: |
-          echo "Nazwa sprawdzenia: ${{ github.event.check_run.name }}"
-          echo "Status: ${{ github.event.check_run.status }}"
-          echo "Wniosek: ${{ github.event.check_run.conclusion }}"
-          
-          if [ "${{ github.event.check_run.conclusion }}" == "failure" ]; then
-            echo "Sprawdzenie nie powiodło się - uruchamianie diagnostyki"
-          fi
+          echo "Workflow '${WORKFLOW_NAME}' zakończony sukcesem"
+          echo "SHA: ${{ github.event.workflow_run.head_sha }}"
+          echo "Gałąź: ${{ github.event.workflow_run.head_branch }}"
+          echo "Rozpoczynam wdrożenie..."
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+
+  investigate_failure:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Analiza niepowodzenia
+        run: |
+          echo "Workflow '${WORKFLOW_NAME}' nie powiódł się"
+          echo "URL do niepowodzenia: ${{ github.event.workflow_run.html_url }}"
+          echo "Powiadamianie zespołu..."
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
