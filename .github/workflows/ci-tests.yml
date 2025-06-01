@@ -1,72 +1,25 @@
-name: Zaawansowane zarządzanie woluminami
-on: [push]
+name: Przykład zarządzania zespołem zadań
+on: [push, pull_request]
 
 jobs:
-  volume_demonstration:
+  # Identyfikator zadania: musi być unikalny i opisowy
+  code_quality_check:
+    name: "Sprawdzenie jakości kodu"    # Nazwa wyświetlana w interfejsie GitHub
     runs-on: ubuntu-latest
-    container:
-      image: node:18
-      volumes:
-        # Cache npm dla przyspieszenia instalacji zależności
-        - npm_cache:/root/.npm
-        # Współdzielenie artefaktów buildu między krokami
-        - build_output:/app/dist
-        # Logi do debugowania (mapowanie z hosta)
-        - /tmp/github_actions_logs:/app/logs
-        # Tymczasowe pliki robocze
-        - workspace:/workspace
-
     steps:
-      - name: Przygotowanie środowiska i cache
-        run: |
-          echo "📦 Przygotowanie cache i workspace:"
-          
-          # Sprawdź dostępne woluminy
-          echo "Dostępne punkty montowania:"
-          mount | grep -E "/root/.npm|/app/dist|/app/logs|/workspace"
-          
-          # Przygotuj strukturę katalogów
-          mkdir -p /app/dist /app/logs /workspace/temp
-          
-          echo "✅ Środowisko przygotowane"
+      - name: Analiza kodu
+        run: echo "Sprawdzanie stylu kodu, linting, bezpieczeństwo"
 
-      - name: Symulacja budowania z wykorzystaniem cache
-        run: |
-          echo "🏗️ Budowanie aplikacji z cache npm:"
-          
-          # Sprawdź czy cache npm istnieje
-          if [ -d "/root/.npm" ] && [ "$(ls -A /root/.npm)" ]; then
-            echo "✅ Cache npm znaleziony - przyspieszona instalacja"
-            ls -la /root/.npm | head -5
-          else
-            echo "📥 Cache npm pusty - pierwsza instalacja"
-          fi
-          
-          # Symulacja npm install (która wykorzysta cache)
-          echo "Instalowanie zależności..."
-          touch /root/.npm/fake-package-cache
-          
-          # Symulacja procesu budowania
-          echo "Kompilowanie aplikacji..."
-          echo "Build output $(date)" > /app/dist/bundle.js
-          echo "Source maps $(date)" > /app/dist/bundle.js.map
-          
-          echo "📊 Logi buildu:" > /app/logs/build.log
-          echo "Build completed at $(date)" >> /app/logs/build.log
+  unit_tests:
+    name: "Testy jednostkowe"           # Czytelna nazwa dla zespołu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Uruchom testy
+        run: echo "Wykonywanie testów jednostkowych i integracyjnych"
 
-      - name: Weryfikacja artefaktów i cleanup
-        run: |
-          echo "🔍 Weryfikacja wygenerowanych artefaktów:"
-          
-          echo "Pliki w /app/dist:"
-          ls -la /app/dist/
-          
-          echo "Zawartość bundle.js:"
-          cat /app/dist/bundle.js
-          
-          echo "Logi buildu:"
-          cat /app/logs/build.log
-          
-          echo "🧹 Cleanup workspace:"
-          rm -rf /workspace/temp/*
-          echo "Workspace wyczyszczony, ale dane w /app/dist pozostają dla kolejnych kroków"
+  build_application:
+    name: "Budowanie aplikacji"         # Jasne określenie celu zadania
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kompilacja
+        run: echo "Budowanie finalnej wersji aplikacji"
