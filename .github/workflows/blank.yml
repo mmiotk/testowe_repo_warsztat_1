@@ -1,33 +1,71 @@
-name: Wykorzystanie grup runnerów
-on: [push, pull_request]
+name: Poprawne zarządzanie powłokami w kontenerach
+on: [push]
 
 jobs:
-  group_based_execution:
-    # Uruchom na dowolnym runnerze z grupy ubuntu-runners
-    runs-on:
-      group: ubuntu-runners
-    steps:
-      - name: Zadanie wykonywane przez grupę
-        run: |
-          echo "📦 Uruchamiam na runnerze z grupy ubuntu-runners"
-          echo "GitHub wybierze najbardziej dostępny runner z tej grupy"
-          echo "Runner ID: ${{ runner.name }}"
-          echo "Grupa zapewnia redundancję i load balancing"
+  shell_progression:
+    runs-on: ubuntu-latest
+    container: alpine:latest
 
-  advanced_group_selection:
-    # Kombinacja grupy z dodatkowymi wymaganiami
-    runs-on:
-      group: ubuntu-runners
-      labels: ubuntu-20.04-16core
     steps:
-      - name: Precyzyjny wybór w ramach grupy
+      - name: Instalacja bash używając sh
+        # Nie ustawiamy `shell: bash` - używamy domyślnej powłoki sh
         run: |
-          echo "🎯 Runner spełniający wszystkie kryteria:"
-          echo "- Należy do grupy ubuntu-runners"
-          echo "- Ma etykietę ubuntu-20.04-16core"
-          echo "- Jest aktualnie dostępny"
+          echo "🔧 Instaluję bash używając powłoki sh..."
+          # W Alpine Linux sh jest dostępne domyślnie
+          apk add --no-cache bash
+          echo "✅ Bash został zainstalowany"
+          
+          # Sprawdźmy czy bash jest teraz dostępny
+          which bash && echo "🎯 Bash znaleziony w: $(which bash)"
+          
+          # Sprawdźmy wersję bash
+          bash --version | head -1
 
-      - name: Wykorzystaj specjalne możliwości
+      - name: Teraz możemy używać bash globalnie
+        shell: bash  # Teraz bash jest już zainstalowany, więc możemy go używać
         run: |
-          echo "💪 Wykorzystuję 16 rdzeni CPU dla intensywnych obliczeń"
-          echo "Równoległe kompilacje, testy wydajnościowe, analiza danych"
+          echo "🐚 Testowanie zaawansowanych funkcji bash:"
+          
+          # Tablice - funkcja dostępna tylko w bash
+          fruits=("apple" "banana" "cherry" "date")
+          echo "Lista owoców: ${fruits[@]}"
+          echo "Pierwszy owoc: ${fruits[0]}"
+          echo "Liczba owoców: ${#fruits[@]}"
+          
+          # Zaawansowane rozwijanie zmiennych
+          filename="report.txt"
+          echo "Pełna nazwa: $filename"
+          echo "Nazwa bez rozszerzenia: ${filename%.txt}"
+          echo "Tylko rozszerzenie: ${filename##*.}"
+          
+          # Operator sprawdzania plików specyficzny dla bash
+          [[ -f "/.dockerenv" ]] && echo "✅ Jestem w kontenerze Docker" || echo "❌ Nie jestem w kontenerze"
+          
+          # Test złożonych warunków bash
+          [[ ${#fruits[@]} -gt 3 ]] && echo "✅ Mamy więcej niż 3 owoce" || echo "❌ Mamy 3 lub mniej owoców"
+
+      - name: Porównanie z sh dla edukacji
+        shell: sh  # Celowo używamy sh żeby pokazać różnice
+        run: |
+          echo "🔧 Uruchamiam w sh - podstawowa funkcjonalność POSIX:"
+          
+          # W sh nie możemy używać tablic jak w bash
+          # fruits=("apple" "banana")  # To by nie działało w sh!
+          
+          # Zamiast tego używamy prostych zmiennych
+          fruits="apple banana cherry date"
+          echo "Owoce jako string: $fruits"
+          
+          # Podstawowe sprawdzanie plików (kompatybilne z POSIX)
+          if [ -f "/.dockerenv" ]; then
+            echo "✅ W kontenerze (sprawdzenie kompatybilne z sh)"
+          else
+            echo "❌ Poza kontenerem"
+          fi
+          
+          # Pokazanie różnic w składni
+          echo "🎓 Różnice między sh a bash:"
+          echo "- sh: używa [ ] do warunków"
+          echo "- bash: może używać [[ ]] z dodatkowymi funkcjami"
+          echo "- sh: nie ma tablic"
+          echo "- bash: ma zaawansowane tablice i funkcje string"
