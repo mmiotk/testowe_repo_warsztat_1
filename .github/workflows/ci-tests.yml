@@ -1,32 +1,29 @@
-name: Nauka używania akcji z Marketplace
-on: [push, pull_request]
+name: Auto-update timestamp
+on:
+  push:
+    branches: [main]
+
+# Kluczowy element - jawne określenie uprawnień
+permissions:
+  contents: write  # Pozwól na modyfikację zawartości repozytorium
 
 jobs:
-  demo_marketplace_action:
+  add_documentation:
     runs-on: ubuntu-latest
     steps:
-      # Krok 1: Zawsze zacznij od pobrania kodu źródłowego
       - name: Pobierz kod z repozytorium
-        uses: actions/checkout@v4
-        # Ta akcja jest tak fundamentalna, że jest używana w 99% workflow
-        # Jest rozwijana i utrzymywana bezpośrednio przez GitHub
-
-      # Krok 2: Skonfiguruj środowisko Node.js
-      - name: Przygotuj środowisko Node.js
-        uses: actions/setup-node@v4
+        uses: actions/checkout@v4  # Użyj najnowszej wersji
         with:
-          # Parametr wejściowy specyfikujący wersję Node.js
-          node-version: '18'
-          # Opcjonalny parametr włączający cache dla npm
-          cache: 'npm'
-        # Ta akcja automatycznie pobiera i instaluje określoną wersję Node.js
-        # Dodatkowo konfiguruje PATH i zmienne środowiskowe
+          # Ważne: użyj tokenu z odpowiednimi uprawnieniami
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Krok 3: Teraz możesz używać Node.js i npm
-      - name: Sprawdź zainstalowane wersje
+      - name: Dodaj timestamp do README (bezpieczne z GITHUB_TOKEN)
         run: |
-          echo "Sprawdzamy co zostało zainstalowane przez akcję:"
-          node --version
-          npm --version
-          echo "Sprawdzamy czy cache npm działa:"
-          npm config get cache
+          echo "Ostatnia aktualizacja: $(date)" >> README.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "Auto-update timestamp [skip ci]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
