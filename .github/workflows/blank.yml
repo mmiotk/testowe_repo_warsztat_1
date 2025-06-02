@@ -1,23 +1,33 @@
-name: CI Tests  # ← Ta nazwa MUSI pasować do "CI Tests" w workflow_run
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+name: Wykorzystanie grup runnerów
+on: [push, pull_request]
 
 jobs:
-  # Najprostszy sposób - pojedynczy string
-  simple_job:
-    runs-on: ubuntu-latest
+  group_based_execution:
+    # Uruchom na dowolnym runnerze z grupy ubuntu-runners
+    runs-on:
+      group: ubuntu-runners
     steps:
-      - name: Podstawowe zadanie
-        run: echo "Uruchamiam na najnowszym Ubuntu"
+      - name: Zadanie wykonywane przez grupę
+        run: |
+          echo "📦 Uruchamiam na runnerze z grupy ubuntu-runners"
+          echo "GitHub wybierze najbardziej dostępny runner z tej grupy"
+          echo "Runner ID: ${{ runner.name }}"
+          echo "Grupa zapewnia redundancję i load balancing"
 
-
-
-  # Tablica etykiet dla precyzyjnego targetowania
-  precise_job:
-    runs-on: [self-hosted]
+  advanced_group_selection:
+    # Kombinacja grupy z dodatkowymi wymaganiami
+    runs-on:
+      group: ubuntu-runners
+      labels: ubuntu-20.04-16core
     steps:
-      - name: Zadanie wymagające GPU
-        run: echo "Uruchamiam na dedykowanej maszynie z kartą graficzną"
+      - name: Precyzyjny wybór w ramach grupy
+        run: |
+          echo "🎯 Runner spełniający wszystkie kryteria:"
+          echo "- Należy do grupy ubuntu-runners"
+          echo "- Ma etykietę ubuntu-20.04-16core"
+          echo "- Jest aktualnie dostępny"
+
+      - name: Wykorzystaj specjalne możliwości
+        run: |
+          echo "💪 Wykorzystuję 16 rdzeni CPU dla intensywnych obliczeń"
+          echo "Równoległe kompilacje, testy wydajnościowe, analiza danych"
