@@ -1,21 +1,51 @@
-# .github/workflows/main.yml
-name: Demonstracja własnej akcji
+# .github/workflows/python-demo.yml
+name: Komunikacja z akcjami Python
 on: [push]
 
 jobs:
-  deploy:
+  inputs_outputs_demo:
     runs-on: ubuntu-latest
     steps:
-      - name: Pobierz kod repozytorium
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Uruchom niestandardowe wdrożenie
-        id: deploy
-        uses: ./.github/actions/custom-deploy
+      # Akcja z wieloma parametrami wejściowymi
+      - name: Skonfiguruj środowisko Python
+        uses: actions/setup-python@v4
         with:
-          environment: 'staging'
-          deployment-key: ${{ secrets.DEPLOY_KEY }}
+          python-version: '3.9'              # Wymagany parametr
+          cache: 'pip'                       # Opcjonalny - włącz cache
+          cache-dependency-path: 'requirements.txt'  # Ścieżka do zależności
+          architecture: 'x64'                # Opcjonalny - architektura
+        # Każdy parametr w sekcji 'with' jest przekazywany do akcji
 
-      - name: Pokaż wynik wdrożenia
+      - name: Zainstaluj zależności
+        run: pip install -r requirements.txt
+
+      - name: Uruchom aplikację Python
+        run: python src/app.py
+
+      # Akcja generująca dane wyjściowe
+      - name: Generuj informacje o buildzie
+        id: build-info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const buildTime = new Date().toISOString();
+            const buildNumber = context.runNumber;
+            const pythonVersion = '3.9';
+            
+            // Ustawianie outputs dla użycia w kolejnych krokach
+            core.setOutput('build-time', buildTime);
+            core.setOutput('build-number', buildNumber);
+            core.setOutput('python-version', pythonVersion);
+            
+            return `Build ${buildNumber} completed at ${buildTime}`;
+
+      # Krok używający danych z poprzednej akcji
+      - name: Wyświetl informacje o buildzie
         run: |
-          echo "Aplikacja wdrożona na: ${{ steps.deploy.outputs.deployment-url }}"
+          echo "🐍 Python Version: ${{ steps.build-info.outputs.python-version }}"
+          echo "⏰ Czas buildu: ${{ steps.build-info.outputs.build-time }}"
+          echo "🔢 Numer buildu: ${{ steps.build-info.outputs.build-number }}"
+          echo "📋 Pełny wynik: ${{ steps.build-info.outputs.result }}"
+        # Składnia steps.ID.outputs.NAZWA pozwala na dostęp do wyników
