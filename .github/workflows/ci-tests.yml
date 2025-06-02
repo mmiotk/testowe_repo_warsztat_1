@@ -1,7 +1,7 @@
 # Ten workflow BĘDZIE uruchamiał kolejne workflow, jeśli istnieją
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
 
 jobs:
   auto_triage:
