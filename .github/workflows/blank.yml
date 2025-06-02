@@ -1,30 +1,60 @@
-name: Node.js CI
-
 on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Wybierz środowisko docelowe'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+        default: 'staging'
+      
+      version:
+        description: 'Wersja do wdrożenia (np. v1.2.3 lub "latest")'
+        required: true
+        type: string
+        default: 'latest'
+      
+      run_migrations:
+        description: 'Czy uruchomić migracje bazy danych?'
+        required: true
+        type: boolean
+        default: false
+      
+      notify_team:
+        description: 'Powiadomić zespół o wdrożeniu?'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
-  test:
+  deploy:
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [16.x, 18.x, 20.x]
-    
     steps:
-      - uses: actions/checkout@v3
+      - name: Wyświetl parametry wdrożenia
+        run: |
+          echo "🚀 Rozpoczynanie wdrożenia..."
+          echo "Środowisko: ${{ inputs.environment }}"
+          echo "Wersja: ${{ inputs.version }}"
+          echo "Migracje: ${{ inputs.run_migrations }}"
+          echo "Powiadomienia: ${{ inputs.notify_team }}"
 
-      - name: Użyj Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+      - name: Walidacja środowiska produkcyjnego
+        if: inputs.environment == 'production'
+        run: |
+          echo "⚠️  UWAGA: Wdrożenie na PRODUKCJĘ!"
+          echo "Upewnij się, że wszystkie testy przeszły pomyślnie"
 
-      - name: Zainstaluj zależności
-        run: npm ci
+      - name: Uruchom migracje bazy danych
+        if: inputs.run_migrations == true
+        run: |
+          echo "🗄️  Uruchamianie migracji bazy danych..."
+          echo "OSTRZEŻENIE: Ta operacja może być nieodwracalna!"
 
-      - name: Uruchom testy
-        run: npm test
+      - name: Powiadom zespół
+        if: inputs.notify_team == true
+        run: |
+          echo "📢 Wysyłanie powiadomienia do zespołu..."
+          echo "Wdrożenie ${{ inputs.version }} na ${{ inputs.environment }} zostało rozpoczęte"
