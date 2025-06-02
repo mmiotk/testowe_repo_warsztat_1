@@ -1,33 +1,23 @@
-name: Reakcja na inne workflow
+name: CI Tests  # ← Ta nazwa MUSI pasować do "CI Tests" w workflow_run
 on:
-  workflow_run:
-    workflows: ["CI Tests", "Security Scan"]
-    types: [completed]
+  push:
+    branches: [main, develop]
+  pull_request:
     branches: [main, develop]
 
 jobs:
-  deploy_after_success:
-    # Wdróż tylko jeśli poprzedni workflow się udał
-    if: github.event.workflow_run.conclusion == 'success'
+  # Najprostszy sposób - pojedynczy string
+  simple_job:
     runs-on: ubuntu-latest
     steps:
-      - name: Wdrożenie po testach
-        run: |
-          echo "Workflow '${WORKFLOW_NAME}' zakończony sukcesem"
-          echo "SHA: ${{ github.event.workflow_run.head_sha }}"
-          echo "Gałąź: ${{ github.event.workflow_run.head_branch }}"
-          echo "Rozpoczynam wdrożenie..."
-        env:
-          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+      - name: Podstawowe zadanie
+        run: echo "Uruchamiam na najnowszym Ubuntu"
 
-  investigate_failure:
-    if: github.event.workflow_run.conclusion == 'failure'
-    runs-on: ubuntu-latest
+
+
+  # Tablica etykiet dla precyzyjnego targetowania
+  precise_job:
+    runs-on: [self-hosted]
     steps:
-      - name: Analiza niepowodzenia
-        run: |
-          echo "Workflow '${WORKFLOW_NAME}' nie powiódł się"
-          echo "URL do niepowodzenia: ${{ github.event.workflow_run.html_url }}"
-          echo "Powiadamianie zespołu..."
-        env:
-          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+      - name: Zadanie wymagające GPU
+        run: echo "Uruchamiam na dedykowanej maszynie z kartą graficzną"
