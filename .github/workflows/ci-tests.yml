@@ -1,29 +1,17 @@
-name: Auto-update timestamp
+# Ten workflow BĘDZIE uruchamiał kolejne workflow, jeśli istnieją
 on:
-  push:
-    branches: [main]
-
-# Kluczowy element - jawne określenie uprawnień
-permissions:
-  contents: write  # Pozwól na modyfikację zawartości repozytorium
+  issues:
+    types: [opened]
 
 jobs:
-  add_documentation:
+  auto_triage:
     runs-on: ubuntu-latest
     steps:
-      - name: Pobierz kod z repozytorium
-        uses: actions/checkout@v4  # Użyj najnowszej wersji
-        with:
-          # Ważne: użyj tokenu z odpowiednimi uprawnieniami
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Dodaj timestamp do README (bezpieczne z GITHUB_TOKEN)
-        run: |
-          echo "Ostatnia aktualizacja: $(date)" >> README.md
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
-          git commit -m "Auto-update timestamp [skip ci]"
-          git push
+      - name: Dodaj etykietę (wyzwoli kolejne workflow)
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Używamy personal access token zamiast GITHUB_TOKEN
+          GH_TOKEN: ${{ secrets.MY_PERSONAL_TOKEN }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+        run: |
+          gh issue edit $ISSUE_URL --add-label "needs-triage"
+          # Jeśli istnieje workflow reagujący na dodanie etykiety, zostanie uruchomiony
