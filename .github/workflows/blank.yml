@@ -1,32 +1,21 @@
-name: Testy z pokryciem kodu
-on: [push, pull_request]
+# .github/workflows/main.yml
+name: Demonstracja własnej akcji
+on: [push]
 
 jobs:
-  test_with_coverage:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Pobierz kod
+      - name: Pobierz kod repozytorium
         uses: actions/checkout@v4
 
-      - name: Skonfiguruj Node.js
-        uses: actions/setup-node@v4
+      - name: Uruchom niestandardowe wdrożenie
+        id: deploy
+        uses: ./.github/actions/custom-deploy
         with:
-          node-version: '18'
-          cache: 'npm'
+          environment: 'staging'
+          deployment-key: ${{ secrets.DEPLOY_KEY }}
 
-      - name: Zainstaluj zależności
-        run: npm ci
-
-      - name: Uruchom testy z pokryciem
-        run: npm run test:coverage
-        # Generuje pliki pokrycia (np. coverage/lcov.info)
-
-      # Akcja społecznościowa do przesłania wyników pokrycia
-      - name: Prześlij pokrycie do Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: true
+      - name: Pokaż wynik wdrożenia
+        run: |
+          echo "Aplikacja wdrożona na: ${{ steps.deploy.outputs.deployment-url }}"
