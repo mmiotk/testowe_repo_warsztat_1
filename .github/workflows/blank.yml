@@ -1,28 +1,33 @@
+name: Reakcja na inne workflow
 on:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: ["CI Tests", "Security Scan"]
+    types: [completed]
+    branches: [main, develop]
 
 jobs:
-  build:
+  deploy_after_success:
+    # Wdróż tylko jeśli poprzedni workflow się udał
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Zbuduj aplikację
-        run: echo "Budowanie aplikacji..."
-
-  deploy_staging:
-    needs: [build]
-    runs-on: ubuntu-latest
-    environment: staging      # Automatyczne wdrożenie
-    steps:
-      - name: Wdróż na staging
-        run: echo "Automatyczne wdrożenie na staging"
-
-  deploy_production:
-    needs: [build]
-    runs-on: ubuntu-latest
-    environment: production   # Wymaga ręcznego zatwierdzenia
-    steps:
-      - name: Wdróż na produkcję
+      - name: Wdrożenie po testach
         run: |
-          echo "Wdrożenie na produkcję po zatwierdzeniu przez team lead"
-          echo "Ta operacja była monitorowana i zatwierdzona"
+          echo "Workflow '${WORKFLOW_NAME}' zakończony sukcesem"
+          echo "SHA: ${{ github.event.workflow_run.head_sha }}"
+          echo "Gałąź: ${{ github.event.workflow_run.head_branch }}"
+          echo "Rozpoczynam wdrożenie..."
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+
+  investigate_failure:
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Analiza niepowodzenia
+        run: |
+          echo "Workflow '${WORKFLOW_NAME}' nie powiódł się"
+          echo "URL do niepowodzenia: ${{ github.event.workflow_run.html_url }}"
+          echo "Powiadamianie zespołu..."
+        env:
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}

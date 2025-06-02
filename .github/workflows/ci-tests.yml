@@ -1,17 +1,24 @@
-# Ten workflow BĘDZIE uruchamiał kolejne workflow, jeśli istnieją
+name: CI Tests  # ← Ta nazwa MUSI pasować do "CI Tests" w workflow_run
 on:
-  issues:
-    types: [opened, labeled]
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 jobs:
-  auto_triage:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Dodaj etykietę (wyzwoli kolejne workflow)
-        env:
-          # Używamy personal access token zamiast GITHUB_TOKEN
-          GH_TOKEN: ${{ secrets.MY_PERSONAL_TOKEN }}
-          ISSUE_URL: ${{ github.event.issue.html_url }}
+      - name: Checkout kodu
+        uses: actions/checkout@v4
+
+      - name: Uruchom testy
         run: |
-          gh issue edit $ISSUE_URL --add-label "needs-triage"
-          # Jeśli istnieje workflow reagujący na dodanie etykiety, zostanie uruchomiony
+          echo "🧪 Uruchamianie testów jednostkowych..."
+          sleep 10  # Symulacja czasu wykonywania testów
+          echo "✅ Wszystkie testy przeszły pomyślnie!"
+
+      - name: Sprawdź pokrycie kodu
+        run: |
+          echo "📊 Analizuję pokrycie kodu..."
+          echo "Pokrycie: 85% - wynik zadowalający"
